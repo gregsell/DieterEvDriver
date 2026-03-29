@@ -1,0 +1,25 @@
+description: EV board support over UART based on uhi22/dieter hardware
+
+config:
+  serial_port:
+    description: Serial device connected to the Arduino (e.g. /dev/ttyACM0)
+    type: string
+    default: /dev/ttyACM0
+  baud_rate:
+    description: UART baud rate
+    type: integer
+    minimum: 9600
+    maximum: 230400
+    default: 115200
+
+provides:
+  board_support:
+    interface: ev_board_support
+    description: CP, CCS lock, contactor control via Arduino
+
+enable_telemetry: true
+
+metadata:
+  license: https://opensource.org/licenses/Apache-2.0
+  authors:
+    - Gregor Sellschopp (TUM)
