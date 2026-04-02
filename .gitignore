@@ -1,0 +1,40 @@
+# Build-Artefakte
+build/
+_build/
+out/
+dist/
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+install_manifest.txt
+CTestTestfile.cmake
+*.cmake
+!CMakeLists.txt
+
+# Compiler-Outputs
+*.o
+*.a
+*.so
+*.so.*
+*.dll
+*.exe
+
+# EVerest / CPM Dependencies (falls lokal gecacht)
+_deps/
+.cpm/
+
+# IDE & Editor
+.vscode/
+.idea/
+*.user
+*.suo
+.DS_Store
+Thumbs.db
+
+# Logs & Temporäres
+*.log
+*.tmp
+*.swp
+*~

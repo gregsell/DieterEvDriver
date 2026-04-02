@@ -2,11 +2,13 @@
 // Copyright Pionix GmbH and Contributors to EVerest
 
 #include "ev_board_supportImpl.hpp"
+#include <everest/logging.hpp>
 
 namespace module {
 namespace board_support {
 
 void ev_board_supportImpl::init() {
+    EVLOG_info << "init PEVSIM 2xxxxx";
 }
 
 void ev_board_supportImpl::ready() {
