@@ -2,6 +2,9 @@ cmake_minimum_required(VERSION 3.14.7)
 project(PEV-SIM VERSION 0.1
     DESCRIPTION "EVerest EV Simulator"
     LANGUAGES CXX C)
+# added afterwards, to let clangd find all deps
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 find_package(everest-cmake 0.1 REQUIRED
     COMPONENTS bundling
     PATHS ../everest-cmake
