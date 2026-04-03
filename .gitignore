@@ -5,12 +5,16 @@ out/
 dist/
 
 # CMake
+CMakeLists.txt.user
 CMakeCache.txt
-CMakeFiles/
+CMakeFiles
+CMakeScripts
+Testing
+Makefile
 cmake_install.cmake
 install_manifest.txt
+compile_commands.json
 CTestTestfile.cmake
-*.cmake
 !CMakeLists.txt
 
 # Compiler-Outputs
@@ -38,3 +42,4 @@ Thumbs.db
 *.tmp
 *.swp
 *~
+.cache/
