@@ -8,12 +8,18 @@
 // template version 3
 //
 
+#include <cstdint>
 #include <generated/interfaces/ev_board_support/Implementation.hpp>
 
 #include "../DieterEvDriver.hpp"
+#include "generated/types/ev_board_support.hpp"
 
 // ev@75ac1216-19eb-4182-a85c-820f1fc2c091:v1
 // insert your custom include headers here
+#include <boost/asio.hpp>
+#include <thread>
+#include <atomic>
+#include <string>
 // ev@75ac1216-19eb-4182-a85c-820f1fc2c091:v1
 
 namespace module {
@@ -55,7 +61,25 @@ private:
     virtual void ready() override;
 
     // ev@3370e4dd-95f4-47a9-aaec-ea76f34a66c9:v1
-    // insert your private definitions here
+    // state var; these are needed as everest is driven by _change_ of events.
+    // The last instance in the chain, the MCU, is supposed to keep track of states.
+    // as this is not the case (for Dieter) we do that here.
+    bool allow_power_on_{false};
+    types::ev_board_support::EvCpState cp_state_{types::ev_board_support::EvCpState::C};
+    int8_t outvalue{0}; // commands for Dieter
+    std::string outvalue_prefix{"do000"}; // a fourth digit (outvalue) plus newline will be added
+
+    std::atomic<bool> running{false};
+    std::atomic<bool> serial_port_ready{false};
+    boost::asio::io_context io_ctx_;
+    std::unique_ptr<boost::asio::serial_port> serial_port_;
+    std::thread serial_thread_;
+
+    void serial_reader_thread();
+    void on_serial_line(const std::string& raw);
+    void map_name_to_event(const std::string& name);
+    void write_to_serial();
+    void update_power_state();
     // ev@3370e4dd-95f4-47a9-aaec-ea76f34a66c9:v1
 };
 

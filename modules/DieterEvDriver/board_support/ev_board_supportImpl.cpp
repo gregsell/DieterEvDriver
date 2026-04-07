@@ -2,7 +2,11 @@
 // Copyright Pionix GmbH and Contributors to EVerest
 
 #include "ev_board_supportImpl.hpp"
-#include <everest/logging.hpp>
+#include "DieterEvDriver.hpp"
+#include "everest/logging.hpp"
+#include "generated/types/ev_board_support.hpp"
+#include <string>
+//#include "everest/logging.hpp"
 
 namespace module {
 namespace board_support {
@@ -10,26 +14,63 @@ namespace board_support {
 void ev_board_supportImpl::init() {
     running = true;
     serial_thread_ = std::thread(&ev_board_supportImpl::serial_reader_thread, this);
-    EVLOG_info << "config serial port:  " << mod->config.serial_port;
-    EVLOG_info << "config baud rate     " << mod->config.baud_rate;  
+    //EVLOG_info << "config serial port:  " << mod->config.serial_port;
+    //EVLOG_info << "config baud rate     " << mod->config.baud_rate;  
 }
 
 void ev_board_supportImpl::ready() {
-        // possible GPIO reset
     EVLOG_info << "ready";
 }
 
 void ev_board_supportImpl::handle_enable(bool& value) {
     // your code for cmd enable goes here
-    if(true);
 }
 
 void ev_board_supportImpl::handle_set_cp_state(types::ev_board_support::EvCpState& cp_state) {
-    // your code for cmd set_cp_state goes here
+    cp_state_= cp_state;
+    EVLOG_info << "new c_p state: " << cp_state;
+    // manipulate last bit according to cp_state_
+    if (cp_state == types::ev_board_support::EvCpState::B) outvalue &= ~1;
+    else if (cp_state == types::ev_board_support::EvCpState::C) outvalue |= 1;
+    write_to_serial();
 }
 
 void ev_board_supportImpl::handle_allow_power_on(bool& value) {
-    // your code for cmd allow_power_on goes here
+    allow_power_on_ = value;
+    if (!allow_power_on_) {
+        // send msg to disable relays
+        outvalue &= 2;
+        write_to_serial();
+    }
+    update_power_state();
+}
+
+void ev_board_supportImpl::update_power_state() {
+    types::board_support_common::BspEvent e;
+    if (allow_power_on_ && cp_state_ == types::ev_board_support::EvCpState::C) {
+        e.event = types::board_support_common::Event::PowerOn;
+    } else {
+        e.event = types::board_support_common::Event::PowerOff;
+    }
+    publish_bsp_event(e);
+}
+
+void ev_board_supportImpl::write_to_serial() {
+    std::string msg = outvalue_prefix + std::to_string(outvalue) + "\n";
+    if (!serial_port_ready) {
+        EVLOG_info << "Ignoring write, serial port not ready: " << msg;
+        return;
+    }
+    if (serial_port_ && serial_port_->is_open()) {
+        EVLOG_info << "TX: " << msg;
+        boost::system::error_code ec;
+        boost::asio::write(*serial_port_, boost::asio::buffer(msg), ec);
+        if (ec) {
+            EVLOG_error << "Serial write failed: " << ec.message();
+        }
+    } else {
+        EVLOG_error << "TX FAILED, port is unexpectedly closed for msg: " << msg;
+    }
 }
 
 void ev_board_supportImpl::handle_diode_fail(bool& value) {
@@ -99,8 +140,49 @@ void ev_board_supportImpl::serial_reader_thread() {
     EVLOG_info << "Serial reader thread finished.";
 }
 
-void ev_board_supportImpl::on_serial_line(const std::string& raw) {
 
+// Helper: check if string starts with prefix
+bool starts_with(const std::string& s, const char* pfx) {
+    return s.rfind(pfx, 0) == 0;
+}
+// Helper: trim whitespace
+std::string trim(const std::string& s) {
+    size_t a = 0, b = s.size();
+    while (a < b && std::isspace(static_cast<unsigned char>(s[a]))) ++a;
+    while (b > a && std::isspace(static_cast<unsigned char>(s[b - 1]))) --b;
+    return s.substr(a, b - a);
+}
+
+void ev_board_supportImpl::on_serial_line(const std::string& raw) {
+    const std::string line = trim(raw);
+    if (line.empty()) return;
+    EVLOG_info << "received raw:  " << raw;  
+    /*
+    // turns out everest does not need vehicle-side high voltage measurements
+    if (starts_with(line, "A0=")) {
+        try {
+            int A0_raw = std::stoi(line.substr(3));
+            int inlet_voltage = A0_raw / 1024.0 * 1.08 * (6250) / (4.7+4.7); // change later according to exact resistor values
+            // possible to verify with A1 reading
+            EVLOG_info << "     inlet voltage " << inlet_voltage;
+        } catch (...) {
+            EVLOG_error << "could not parse inlet voltage line";
+        }
+    }
+        */
+}   
+
+ev_board_supportImpl::~ev_board_supportImpl() {
+    running = false;
+
+    if (serial_port_ && serial_port_->is_open()) {
+        boost::system::error_code ignore_ec;
+        serial_port_->cancel(ignore_ec);
+        serial_port_->close(ignore_ec);
+    }
+    if (serial_thread_.joinable()) serial_thread_.join();
+
+    EVLOG_info << "All threads stopped cleanly.";
 }
 
 } // namespace board_support
