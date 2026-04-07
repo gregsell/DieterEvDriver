@@ -20,6 +20,14 @@ void ev_board_supportImpl::init() {
 
 void ev_board_supportImpl::ready() {
     EVLOG_info << "ready";
+    // DIRTY FIX: no pwm measurement in hardware, 
+    // thus we for now assume DC operation with HLC and thus set 5% dutycycle
+    // not the best solution, but it worked for uhi22 and pyPLC:  https://github.com/uhi22/pyPLC/blob/079cd684e23f26b047687fb81fa2a27d1b097044/pyPlcHomeplug.py#L975
+    types::board_support_common::BspMeasurement bspm;
+    bspm.cp_pwm_duty_cycle = 5.;
+    // This is not implemented on MCU side yet
+    bspm.proximity_pilot = {types::board_support_common::Ampacity::None};
+    publish_bsp_measurement(bspm);
 }
 
 void ev_board_supportImpl::handle_enable(bool& value) {
