@@ -1,3 +1,154 @@
 active_modules:
   DieterEvDriver_instance:
     module: DieterEvDriver
+    connections: {}
+    config_module:
+      baud_rate: 19200
+      serial_port: /dev/ttyACM0
+  EvManager0:
+    module: EvManager
+    connections:
+      ev:
+        - module_id: PyEvJosev0
+          implementation_id: ev
+      ev_board_support:
+        - module_id: DieterEvDriver_instance
+          implementation_id: board_support
+      kvs:
+        - module_id: Store0
+          implementation_id: main
+      slac:
+        - module_id: EvSlac0
+          implementation_id: main
+    config_module:
+      ac_nominal_voltage: 230
+      auto_enable: true
+      auto_exec: true
+      auto_exec_commands: ''
+      auto_exec_infinite: false
+      connector_id: 1
+      dc_discharge_max_current_limit: 300
+      dc_discharge_max_power_limit: 150000
+      dc_discharge_target_current: 5
+      dc_discharge_v2g_minimal_soc: 20
+      dc_energy_capacity: 60000
+      dc_max_current_limit: 300
+      dc_max_power_limit: 150000
+      dc_max_voltage_limit: 900
+      dc_target_current: 5
+      dc_target_voltage: 200
+      departure_time: 86400
+      e_amount: 0
+      force_payment_option: false
+      keep_cross_boot_plugin_state: false
+      max_current: 16
+      plugin_commands: ''
+      soc: 30
+      support_sae_j2847: false
+      three_phases: false
+  PyEvJosev0:
+    module: PyEvJosev
+    connections: {}
+    config_module:
+      device: eth0
+      enable_tls_1_3: false
+      enforce_tls: false
+      is_cert_install_needed: false
+      is_internet_service_needed: false
+      request_all_service_details: false
+      select_all_vas_services: false
+      supported_DIN70121: false
+      supported_ISO15118_2: true
+      supported_ISO15118_20_AC: false
+      supported_ISO15118_20_DC: true
+      supported_d20_energy_services: DC,DC_BPT
+      tls_active: false
+  Store0:
+    module: Store
+    connections: {}
+  EvSlac0:
+    module: EvSlac
+    connections: {}
+    config_implementation:
+      main:
+        device: eth1
+        set_key_timeout_ms: 500
+x-module-layout:
+  DieterEvDriver_instance:
+    position:
+      x: 0
+      'y': 0
+    terminals:
+      top: []
+      right:
+        - id: board_support
+          interface: ev_board_support
+          type: provide
+      bottom: []
+      left: []
+  EvManager0:
+    position:
+      x: 27
+      'y': 6
+    terminals:
+      top: []
+      right:
+        - id: ev_manager
+          interface: ev_manager
+          type: provide
+        - id: main
+          interface: car_simulator
+          type: provide
+      bottom: []
+      left:
+        - id: ev
+          interface: ISO15118_ev
+          type: requirement
+        - id: ev_board_support
+          interface: ev_board_support
+          type: requirement
+        - id: kvs
+          interface: kvs
+          type: requirement
+        - id: powermeter
+          interface: powermeter
+          type: requirement
+        - id: slac
+          interface: ev_slac
+          type: requirement
+  PyEvJosev0:
+    position:
+      x: 7
+      'y': -19
+    terminals:
+      top: []
+      right:
+        - id: ev
+          interface: ISO15118_ev
+          type: provide
+      bottom: []
+      left: []
+  Store0:
+    position:
+      x: 0
+      'y': 7
+    terminals:
+      top: []
+      right:
+        - id: main
+          interface: kvs
+          type: provide
+      bottom: []
+      left: []
+  EvSlac0:
+    position:
+      x: 2
+      'y': 25
+    terminals:
+      top: []
+      right:
+        - id: main
+          interface: ev_slac
+          type: provide
+      bottom: []
+      left: []

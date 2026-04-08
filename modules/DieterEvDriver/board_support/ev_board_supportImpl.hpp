@@ -65,7 +65,7 @@ private:
     // The last instance in the chain, the MCU, is supposed to keep track of states.
     // as this is not the case (for Dieter) we do that here.
     bool allow_power_on_{false};
-    types::ev_board_support::EvCpState cp_state_{types::ev_board_support::EvCpState::C};
+    types::ev_board_support::EvCpState cp_state_{types::ev_board_support::EvCpState::A};
     int8_t outvalue{0}; // commands for Dieter
     std::string outvalue_prefix{"do000"}; // a fourth digit (outvalue) plus newline will be added
 
