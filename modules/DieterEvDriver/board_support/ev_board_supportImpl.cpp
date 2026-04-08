@@ -6,16 +6,31 @@
 #include "everest/logging.hpp"
 #include "generated/types/ev_board_support.hpp"
 #include <string>
-//#include "everest/logging.hpp"
+
+// helper namespace
+namespace {
+
+// Helper: check if string starts with prefix
+bool starts_with(const std::string& s, const char* pfx) {
+    return s.rfind(pfx, 0) == 0;
+}
+// Helper: trim whitespace
+std::string trim(const std::string& s) {
+    size_t a = 0, b = s.size();
+    while (a < b && std::isspace(static_cast<unsigned char>(s[a]))) ++a;
+    while (b > a && std::isspace(static_cast<unsigned char>(s[b - 1]))) --b;
+    return s.substr(a, b - a);
+}
+
+}
 
 namespace module {
 namespace board_support {
 
 void ev_board_supportImpl::init() {
     running = true;
-    serial_thread_ = std::thread(&ev_board_supportImpl::serial_reader_thread, this);
-    //EVLOG_info << "config serial port:  " << mod->config.serial_port;
-    //EVLOG_info << "config baud rate     " << mod->config.baud_rate;  
+    serial_thread_ = std::thread(&ev_board_supportImpl::serial_reader_thread, this); 
+    EVLOG_info << "init";
 }
 
 void ev_board_supportImpl::ready() {
@@ -32,6 +47,7 @@ void ev_board_supportImpl::ready() {
 
 void ev_board_supportImpl::handle_enable(bool& value) {
     // your code for cmd enable goes here
+    EVLOG_info << "handle_enable: " << value;
 }
 
 void ev_board_supportImpl::handle_set_cp_state(types::ev_board_support::EvCpState& cp_state) {
@@ -41,6 +57,7 @@ void ev_board_supportImpl::handle_set_cp_state(types::ev_board_support::EvCpStat
     if (cp_state == types::ev_board_support::EvCpState::B) outvalue &= ~1;
     else if (cp_state == types::ev_board_support::EvCpState::C) outvalue |= 1;
     write_to_serial();
+    update_power_state(); // rethink
 }
 
 void ev_board_supportImpl::handle_allow_power_on(bool& value) {
@@ -54,13 +71,13 @@ void ev_board_supportImpl::handle_allow_power_on(bool& value) {
 }
 
 void ev_board_supportImpl::update_power_state() {
-    types::board_support_common::BspEvent e;
+    types::board_support_common::BspEvent bspe;
     if (allow_power_on_ && cp_state_ == types::ev_board_support::EvCpState::C) {
-        e.event = types::board_support_common::Event::PowerOn;
+        bspe.event = types::board_support_common::Event::PowerOn;
     } else {
-        e.event = types::board_support_common::Event::PowerOff;
+        bspe.event = types::board_support_common::Event::PowerOff;
     }
-    publish_bsp_event(e);
+    publish_bsp_event(bspe);
 }
 
 void ev_board_supportImpl::write_to_serial() {
@@ -82,22 +99,23 @@ void ev_board_supportImpl::write_to_serial() {
 }
 
 void ev_board_supportImpl::handle_diode_fail(bool& value) {
-    // your code for cmd diode_fail goes here
+    EVLOG_info << "handle_diode_fail: " << value;
 }
 
 void ev_board_supportImpl::handle_set_ac_max_current(double& current) {
-    // your code for cmd set_ac_max_current goes here
+    EVLOG_info << "handle_set_ac_max_current: " << current;
 }
 
 void ev_board_supportImpl::handle_set_three_phases(bool& three_phases) {
-    // your code for cmd set_three_phases goes here
+    EVLOG_info << "handle_set_three_phases: " << three_phases;
 }
 
 void ev_board_supportImpl::handle_set_rcd_error(double& rcd_current_mA) {
-    // your code for cmd set_rcd_error goes here
+    EVLOG_info << "handle_set_rcd_error: " << rcd_current_mA;
 }
 
 void ev_board_supportImpl::serial_reader_thread() {
+    int serial_fail_count = 0;
     while (running) { // outer while-loop implements auto-reconnect
         try {
              EVLOG_info << "Attempting to open serial port " << mod->config.serial_port << " at " << mod->config.baud_rate << " baud...";
@@ -141,24 +159,16 @@ void ev_board_supportImpl::serial_reader_thread() {
             boost::system::error_code ignore_ec;
             serial_port_->close(ignore_ec); // clangd warning regarding unused return object wrong
         }
-
+        // in serial_reader_thread(), nach dem catch-Block:
+        if (++serial_fail_count > 5) {
+            mod->p_board_support->raise_error(
+                mod->p_board_support->error_factory->create_error(
+                    "generic/CommunicationFault", "", "Serial port repeatedly unavailable"));
+        }
         if (running) std::this_thread::sleep_for(std::chrono::seconds(5)); // wait after serial comm. error
     }
 
     EVLOG_info << "Serial reader thread finished.";
-}
-
-
-// Helper: check if string starts with prefix
-bool starts_with(const std::string& s, const char* pfx) {
-    return s.rfind(pfx, 0) == 0;
-}
-// Helper: trim whitespace
-std::string trim(const std::string& s) {
-    size_t a = 0, b = s.size();
-    while (a < b && std::isspace(static_cast<unsigned char>(s[a]))) ++a;
-    while (b > a && std::isspace(static_cast<unsigned char>(s[b - 1]))) --b;
-    return s.substr(a, b - a);
 }
 
 void ev_board_supportImpl::on_serial_line(const std::string& raw) {
