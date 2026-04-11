@@ -51,11 +51,21 @@ void ev_board_supportImpl::handle_enable(bool& value) {
 }
 
 void ev_board_supportImpl::handle_set_cp_state(types::ev_board_support::EvCpState& cp_state) {
-    cp_state_= cp_state;
+    //cp_state_= cp_state;
     EVLOG_info << "new c_p state: " << cp_state;
-    // manipulate last bit according to cp_state_
-    if (cp_state == types::ev_board_support::EvCpState::B) outvalue &= ~1;
-    else if (cp_state == types::ev_board_support::EvCpState::C) outvalue |= 1;
+    
+    if (cp_state == types::ev_board_support::EvCpState::B) {
+        outvalue &= ~1; // set c_p state bit ->B
+        if (cp_state_== types::ev_board_support::EvCpState::A) {
+            outvalue |= 4; // enable connector lock iff transition A->B
+        }
+        else if (cp_state_== types::ev_board_support::EvCpState::C) {
+            outvalue &= ~4; // disable connector lock iff transition C->B
+        }
+    } 
+    else if (cp_state == types::ev_board_support::EvCpState::C) {
+        outvalue |= 1; // set c_p state bit ->C
+    }
     write_to_serial();
     update_power_state(); // rethink
 }
@@ -72,7 +82,8 @@ void ev_board_supportImpl::handle_allow_power_on(bool& value) {
 
 void ev_board_supportImpl::update_power_state() {
     types::board_support_common::BspEvent bspe;
-    if (allow_power_on_ && cp_state_ == types::ev_board_support::EvCpState::C) {
+    if (allow_power_on_ && (cp_state_ == types::ev_board_support::EvCpState::C
+                        ||  cp_state_ == types::ev_board_support::EvCpState::D)) {
         bspe.event = types::board_support_common::Event::PowerOn;
     } else {
         bspe.event = types::board_support_common::Event::PowerOff;
@@ -115,8 +126,8 @@ void ev_board_supportImpl::handle_set_rcd_error(double& rcd_current_mA) {
 }
 
 void ev_board_supportImpl::serial_reader_thread() {
-    int serial_fail_count = 0;
     while (running) { // outer while-loop implements auto-reconnect
+    int serial_fail_count = 0;
         try {
              EVLOG_info << "Attempting to open serial port " << mod->config.serial_port << " at " << mod->config.baud_rate << " baud...";
             serial_port_ = std::make_unique<boost::asio::serial_port>(io_ctx_);
@@ -165,7 +176,7 @@ void ev_board_supportImpl::serial_reader_thread() {
                 mod->p_board_support->error_factory->create_error(
                     "generic/CommunicationFault", "", "Serial port repeatedly unavailable"));
         }
-        if (running) std::this_thread::sleep_for(std::chrono::seconds(5)); // wait after serial comm. error
+        if (running) std::this_thread::sleep_for(std::chrono::seconds(3)); // wait after serial comm. error
     }
 
     EVLOG_info << "Serial reader thread finished.";
