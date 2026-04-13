@@ -117,12 +117,33 @@ void ev_board_supportImpl::handle_set_ac_max_current(double& current) {
     EVLOG_info << "handle_set_ac_max_current: " << current;
 }
 
-void ev_board_supportImpl::handle_set_three_phases(bool& three_phases) {
-    EVLOG_info << "handle_set_three_phases: " << three_phases;
-}
+void ev_board_supportImpl::on_serial_line(const std::string& raw) {
+    const std::string line = trim(raw);
+    if (line.empty()) return;
+    EVLOG_info << "received raw:  " << raw;  
 
-void ev_board_supportImpl::handle_set_rcd_error(double& rcd_current_mA) {
-    EVLOG_info << "handle_set_rcd_error: " << rcd_current_mA;
+    const int pos_separator = line.find(':');
+    // extract key
+    std::string key = line.substr(0, pos_separator);
+    std::string value = line.substr(pos_separator+1, line.length());
+    EVLOG_info << "found key: " << key << " and value: " << value;
+
+    try{
+        if (key.compare("cp_duty_cycle") == 0) {
+            if (std::stoi(value) != cp_duty_cycle_) {
+                cp_duty_cycle_ = std::clamp(std::stoi(value), 0, 100);   // update state var
+                types::board_support_common::BspMeasurement bspm;                        // publish respective Events
+                bspm.cp_pwm_duty_cycle = cp_duty_cycle_;
+                bspm.proximity_pilot = {types::board_support_common::Ampacity::None};// This is not implemented on MCU side
+                publish_bsp_measurement(bspm);   
+            }
+        }
+        else if (key.compare("connector_lock_confirmed") == 0) {
+            connector_lock_confirmed = (std::stoi(value) != 0);                     // update state var        
+        }
+    } catch (...) {
+        EVLOG_error << "could not parse line: " << line;
+    }
 }
 
 void ev_board_supportImpl::serial_reader_thread() {
