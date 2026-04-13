@@ -8,7 +8,6 @@
 // template version 3
 //
 
-#include <cstdint>
 #include <generated/interfaces/ev_board_support/Implementation.hpp>
 
 #include "../DieterEvDriver.hpp"
@@ -63,11 +62,11 @@ private:
     // ev@3370e4dd-95f4-47a9-aaec-ea76f34a66c9:v1
     // state var; these are needed as everest is driven by _change_ of events.
     // The last instance in the chain, the MCU, is supposed to keep track of states.
-    // as this is not the case (for Dieter) we do that here.
+    // as this is not the case (for Dieter) we do that here. E.g. YetiEvDriver handles this differently
     bool allow_power_on_{false};
+    bool connector_lock_confirmed {false};
     types::ev_board_support::EvCpState cp_state_{types::ev_board_support::EvCpState::A};
-    int8_t outvalue{0}; // commands for Dieter
-    std::string outvalue_prefix{"do000"}; // a fourth digit (outvalue) plus newline will be added
+    int cp_duty_cycle_{0};
 
     std::atomic<bool> running{false};
     std::atomic<bool> serial_port_ready{false};
@@ -76,10 +75,10 @@ private:
     std::thread serial_thread_;
 
     void serial_reader_thread();
-    void on_serial_line(const std::string& raw);
-    void map_name_to_event(const std::string& name);
-    void write_to_serial();
-    void update_power_state();
+    void on_serial_line(const std::string& raw);    // for testing with software injection move this to the public section above
+    void write_to_serial(const std::string& msg);
+    void update_power_state();                      // evaluates allow_power_on, cp state and connector lock feedback
+    void publish_all_var();                         // helper for publishing all VARs at once
     // ev@3370e4dd-95f4-47a9-aaec-ea76f34a66c9:v1
 };
 

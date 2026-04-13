@@ -4,7 +4,9 @@
 #include "ev_board_supportImpl.hpp"
 #include "DieterEvDriver.hpp"
 #include "everest/logging.hpp"
+#include "generated/types/board_support_common.hpp"
 #include "generated/types/ev_board_support.hpp"
+#include <cstring>
 #include <string>
 
 // helper namespace
@@ -27,72 +29,11 @@ std::string trim(const std::string& s) {
 namespace module {
 namespace board_support {
 
-void ev_board_supportImpl::init() {
-    running = true;
-    serial_thread_ = std::thread(&ev_board_supportImpl::serial_reader_thread, this); 
-    EVLOG_info << "init";
-}
-
-void ev_board_supportImpl::ready() {
-    EVLOG_info << "ready";
-    // DIRTY FIX: no pwm measurement in hardware, 
-    // thus we for now assume DC operation with HLC and thus set 5% dutycycle
-    // not the best solution, but it worked for uhi22 and pyPLC:  https://github.com/uhi22/pyPLC/blob/079cd684e23f26b047687fb81fa2a27d1b097044/pyPlcHomeplug.py#L975
-    types::board_support_common::BspMeasurement bspm;
-    bspm.cp_pwm_duty_cycle = 5.;
-    // This is not implemented on MCU side yet
-    bspm.proximity_pilot = {types::board_support_common::Ampacity::None};
-    publish_bsp_measurement(bspm);
-}
-
-void ev_board_supportImpl::handle_enable(bool& value) {
-    // your code for cmd enable goes here
-    EVLOG_info << "handle_enable: " << value;
-}
-
-void ev_board_supportImpl::handle_set_cp_state(types::ev_board_support::EvCpState& cp_state) {
-    //cp_state_= cp_state;
-    EVLOG_info << "new c_p state: " << cp_state;
-    
-    if (cp_state == types::ev_board_support::EvCpState::B) {
-        outvalue &= ~1; // set c_p state bit ->B
-        if (cp_state_== types::ev_board_support::EvCpState::A) {
-            outvalue |= 4; // enable connector lock iff transition A->B
-        }
-        else if (cp_state_== types::ev_board_support::EvCpState::C) {
-            outvalue &= ~4; // disable connector lock iff transition C->B
-        }
-    } 
-    else if (cp_state == types::ev_board_support::EvCpState::C) {
-        outvalue |= 1; // set c_p state bit ->C
+void ev_board_supportImpl::write_to_serial(const std::string& msg) {
+    if ((msg.back() != '\n') && (msg.find(':') != std::string::npos)) { // check if colon exists and is newline -terminated
+        EVLOG_error << "invalid message synax: " << msg;
+        return;
     }
-    write_to_serial();
-    update_power_state(); // rethink
-}
-
-void ev_board_supportImpl::handle_allow_power_on(bool& value) {
-    allow_power_on_ = value;
-    if (!allow_power_on_) {
-        // send msg to disable relays
-        outvalue &= 2;
-        write_to_serial();
-    }
-    update_power_state();
-}
-
-void ev_board_supportImpl::update_power_state() {
-    types::board_support_common::BspEvent bspe;
-    if (allow_power_on_ && (cp_state_ == types::ev_board_support::EvCpState::C
-                        ||  cp_state_ == types::ev_board_support::EvCpState::D)) {
-        bspe.event = types::board_support_common::Event::PowerOn;
-    } else {
-        bspe.event = types::board_support_common::Event::PowerOff;
-    }
-    publish_bsp_event(bspe);
-}
-
-void ev_board_supportImpl::write_to_serial() {
-    std::string msg = outvalue_prefix + std::to_string(outvalue) + "\n";
     if (!serial_port_ready) {
         EVLOG_info << "Ignoring write, serial port not ready: " << msg;
         return;
@@ -109,12 +50,17 @@ void ev_board_supportImpl::write_to_serial() {
     }
 }
 
-void ev_board_supportImpl::handle_diode_fail(bool& value) {
-    EVLOG_info << "handle_diode_fail: " << value;
-}
-
-void ev_board_supportImpl::handle_set_ac_max_current(double& current) {
-    EVLOG_info << "handle_set_ac_max_current: " << current;
+void ev_board_supportImpl::update_power_state() {
+    types::board_support_common::BspEvent bspe;
+    if (allow_power_on_ && connector_lock_confirmed && (cp_state_ == types::ev_board_support::EvCpState::C
+                                                    ||  cp_state_ == types::ev_board_support::EvCpState::D)) {
+        bspe.event = types::board_support_common::Event::PowerOn;
+        write_to_serial("set_contactor:1");
+    } else {
+        bspe.event = types::board_support_common::Event::PowerOff;
+        write_to_serial("set_contactor:0");
+    }
+    publish_bsp_event(bspe);
 }
 
 void ev_board_supportImpl::on_serial_line(const std::string& raw) {
@@ -144,7 +90,7 @@ void ev_board_supportImpl::on_serial_line(const std::string& raw) {
     } catch (...) {
         EVLOG_error << "could not parse line: " << line;
     }
-}
+}   
 
 void ev_board_supportImpl::serial_reader_thread() {
     while (running) { // outer while-loop implements auto-reconnect
@@ -201,26 +147,109 @@ void ev_board_supportImpl::serial_reader_thread() {
     }
 
     EVLOG_info << "Serial reader thread finished.";
+} 
+
+void ev_board_supportImpl::publish_all_var() {  // publish all VAR as defined here: https://everest.github.io/nightly/reference/interfaces/ev_board_support.html#ev-board-support
+    types::board_support_common::BspMeasurement bspm;          
+    bspm.cp_pwm_duty_cycle = cp_duty_cycle_;
+    bspm.proximity_pilot = {types::board_support_common::Ampacity::None};// This is not implemented on MCU side
+    publish_bsp_measurement(bspm);  
+
+    types::board_support_common::BspEvent bspe;
+    bspe.event = types::board_support_common::string_to_event(types::ev_board_support::ev_cp_state_to_string(cp_state_));
+    publish_bsp_event(bspe);
+
+    // add VAR: ev_info [optional]
+
+    EVLOG_info << "published bsp_measurement: " << bspm;
+    EVLOG_info << "published bsp_event: " << bspe;
 }
 
-void ev_board_supportImpl::on_serial_line(const std::string& raw) {
-    const std::string line = trim(raw);
-    if (line.empty()) return;
-    EVLOG_info << "received raw:  " << raw;  
-    /*
-    // turns out everest does not need vehicle-side high voltage measurements
-    if (starts_with(line, "A0=")) {
-        try {
-            int A0_raw = std::stoi(line.substr(3));
-            int inlet_voltage = A0_raw / 1024.0 * 1.08 * (6250) / (4.7+4.7); // change later according to exact resistor values
-            // possible to verify with A1 reading
-            EVLOG_info << "     inlet voltage " << inlet_voltage;
-        } catch (...) {
-            EVLOG_error << "could not parse inlet voltage line";
+void ev_board_supportImpl::init() {
+    running = true;
+    serial_thread_ = std::thread(&ev_board_supportImpl::serial_reader_thread, this); 
+    EVLOG_info << "init";
+}
+
+void ev_board_supportImpl::ready() {
+    EVLOG_info << "ready";
+    // publish_all_var(); // is this needed here?
+}
+
+void ev_board_supportImpl::handle_enable(bool& value) {
+    EVLOG_info << "handle_enable: " << value;
+    // std::this_thread::sleep_for(std::chrono::milliseconds(500)); // optional delay to wait for values from MCU
+    publish_all_var();
+}
+
+void ev_board_supportImpl::handle_set_cp_state(types::ev_board_support::EvCpState& cp_state) {
+    //if (cp_state == cp_state_) return; // gute oder schlechte Idee?
+    EVLOG_info << "change c_p state from " << cp_state_ << " to " << cp_state;
+
+    if (cp_state == types::ev_board_support::EvCpState::B ||
+        cp_state == types::ev_board_support::EvCpState::C ||
+        cp_state == types::ev_board_support::EvCpState::D) {
+        // lock connector
+        if (!connector_lock_confirmed) {    // check if connector is locked already, as it could damage the motor
+            write_to_serial("set_connector_lock:1");
+            std::this_thread::sleep_for(std::chrono::seconds(1));   // add delay and wait for feedback
+            if (!connector_lock_confirmed) {
+                EVLOG_error << "connector lock not closing";
+                //const std::string oldEvent = types::ev_board_support::ev_cp_state_to_string(cp_state_);
+                //publish_bsp_event(types::board_support_common::BspEvent:: string_to_event(oldEvent)); // publish previous state
+                return;
+            }
         }
+        if (cp_state == types::ev_board_support::EvCpState::C ||
+            cp_state == types::ev_board_support::EvCpState::D) {
+            write_to_serial("set_state_c:1");                   // enable mosfet, to pull Cp down
+            // note that the contactors are not enabled here, as this is also dependent on allow_power_on
+            // this is checked by the update_power_state method called at the end of this scope
+        }
+        else  {
+            write_to_serial("set_state_c:0");
+        }
+
+     } else if (cp_state == types::ev_board_support::EvCpState::E) {
+        // short of Cp to PE (connection lost)
+        // unlock connector instantly
+        if (connector_lock_confirmed) { // check if connector is unlocked already, as it could damage the motor
+            write_to_serial("set_connector_lock:0");
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+            if (connector_lock_confirmed) {
+                EVLOG_error << "connector lock not opening";
+            }
+        }
+     }
+    
+    cp_state_ = cp_state;
+    update_power_state();
+}
+
+void ev_board_supportImpl::handle_allow_power_on(bool& value) {
+    allow_power_on_ = value;
+    if (!allow_power_on_) {
+        // send msg to disable relays
+        write_to_serial("set_contactor:1");
     }
-        */
-}   
+    update_power_state();
+}
+
+void ev_board_supportImpl::handle_diode_fail(bool& value) {
+    EVLOG_info << "handle_diode_fail: " << value;
+}
+
+void ev_board_supportImpl::handle_set_ac_max_current(double& current) {
+    EVLOG_info << "handle_set_ac_max_current: " << current;
+}
+
+void ev_board_supportImpl::handle_set_three_phases(bool& three_phases) {
+    EVLOG_info << "handle_set_three_phases: " << three_phases;
+}
+
+void ev_board_supportImpl::handle_set_rcd_error(double& rcd_current_mA) {
+    EVLOG_info << "handle_set_rcd_error: " << rcd_current_mA;
+}
 
 ev_board_supportImpl::~ev_board_supportImpl() {
     running = false;
