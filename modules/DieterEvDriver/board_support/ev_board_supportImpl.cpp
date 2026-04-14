@@ -210,9 +210,10 @@ void ev_board_supportImpl::handle_set_cp_state(types::ev_board_support::EvCpStat
             write_to_serial("set_state_c:0");
         }
 
-     } else if (cp_state == types::ev_board_support::EvCpState::E) {
+     } else { //if (cp_state == types::ev_board_support::EvCpState::E) {
         // short of Cp to PE (connection lost)
         // unlock connector instantly
+        write_to_serial("set_state_c:0");
         if (connector_lock_confirmed) { // check if connector is unlocked already, as it could damage the motor
             write_to_serial("set_connector_lock:0");
             std::this_thread::sleep_for(std::chrono::seconds(1));
