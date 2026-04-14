@@ -231,7 +231,7 @@ void ev_board_supportImpl::handle_allow_power_on(bool& value) {
     allow_power_on_ = value;
     if (!allow_power_on_) {
         // send msg to disable relays
-        write_to_serial("set_contactor:1");
+        write_to_serial("set_contactor:0");
     }
     update_power_state();
 }
