@@ -77,7 +77,9 @@ private:
     void serial_reader_thread();
     void on_serial_line(const std::string& raw);    // for testing with software injection move this to the public section above
     void write_to_serial(const std::string& msg);
+    void write_to_serial( const std::string& key, int value);
     void update_power_state();                      // evaluates allow_power_on, cp state and connector lock feedback
+    bool verifyLockState(bool lockState);           // polls state of connector lock until valid or timeout
     void publish_all_var();                         // helper for publishing all VARs at once
     // ev@3370e4dd-95f4-47a9-aaec-ea76f34a66c9:v1
 };

@@ -6,6 +6,7 @@
 #include "everest/logging.hpp"
 #include "generated/types/board_support_common.hpp"
 #include "generated/types/ev_board_support.hpp"
+#include <chrono>
 #include <cstring>
 #include <string>
 
@@ -29,7 +30,29 @@ std::string trim(const std::string& s) {
 namespace module {
 namespace board_support {
 
-void ev_board_supportImpl::write_to_serial(const std::string& msg) {
+void ev_board_supportImpl::write_to_serial(const std::string& key, int value) {
+    const std::string msg = trim(key) + ":" + std::to_string(value) +"\n";
+
+    if (!serial_port_ready) {
+        EVLOG_info << "Ignoring write, serial port not ready: " << msg;
+        return;
+    }
+    if (serial_port_ && serial_port_->is_open()) {
+        EVLOG_info << "TX: " << msg;
+        boost::system::error_code ec;
+        boost::asio::write(*serial_port_, boost::asio::buffer(msg), ec);
+        if (ec) {
+            EVLOG_error << "Serial write failed: " << ec.message();
+        }
+    } else {
+        EVLOG_error << "TX FAILED, port is unexpectedly closed for msg: " << msg;
+    }
+}
+
+[[deprecated("easily causes syntax issues, replaced by overload with key and value")]]
+void ev_board_supportImpl::write_to_serial(const std::string& msg42) {
+    std::string msg = msg42 + "\n";   // ARRGHHH
+    
     if ((msg.back() != '\n') && (msg.find(':') != std::string::npos)) { // check if colon exists and is newline -terminated
         EVLOG_error << "invalid message synax: " << msg;
         return;
@@ -55,24 +78,41 @@ void ev_board_supportImpl::update_power_state() {
     if (allow_power_on_ && connector_lock_confirmed && (cp_state_ == types::ev_board_support::EvCpState::C
                                                     ||  cp_state_ == types::ev_board_support::EvCpState::D)) {
         bspe.event = types::board_support_common::Event::PowerOn;
-        write_to_serial("set_contactor:1");
+        write_to_serial("set_contactor",1);
     } else {
         bspe.event = types::board_support_common::Event::PowerOff;
-        write_to_serial("set_contactor:0");
+        write_to_serial("set_contactor",0);
     }
     publish_bsp_event(bspe);
+}
+
+bool ev_board_supportImpl::verifyLockState(bool lockState) {
+    auto start = std::chrono::steady_clock::now();
+    const auto timeout = std::chrono::milliseconds(2000);
+
+    while (true) {
+        if (lockState == connector_lock_confirmed) {
+            return true;
+        }
+        auto now = std::chrono::steady_clock::now();
+
+        if (now - start >= timeout) {
+            return false;
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
 }
 
 void ev_board_supportImpl::on_serial_line(const std::string& raw) {
     const std::string line = trim(raw);
     if (line.empty()) return;
-    EVLOG_info << "received raw:  " << raw;  
+    // EVLOG_info << "received raw:  " << raw;  
 
     const int pos_separator = line.find(':');
     // extract key
     std::string key = line.substr(0, pos_separator);
     std::string value = line.substr(pos_separator+1, line.length());
-    EVLOG_info << "found key: " << key << " and value: " << value;
+    //EVLOG_info << "found key: " << key << " and value: " << value;
 
     try{
         if (key.compare("cp_duty_cycle") == 0) {
@@ -185,53 +225,60 @@ void ev_board_supportImpl::handle_enable(bool& value) {
 void ev_board_supportImpl::handle_set_cp_state(types::ev_board_support::EvCpState& cp_state) {
     //if (cp_state == cp_state_) return; // gute oder schlechte Idee?
     EVLOG_info << "change c_p state from " << cp_state_ << " to " << cp_state;
+    //types::ev_board_support::EvCpState prev_state = cp_state; // backup s
 
     if (cp_state == types::ev_board_support::EvCpState::B ||
         cp_state == types::ev_board_support::EvCpState::C ||
         cp_state == types::ev_board_support::EvCpState::D) {
         // lock connector
         if (!connector_lock_confirmed) {    // check if connector is locked already, as it could damage the motor
-            write_to_serial("set_connector_lock:1");
-            std::this_thread::sleep_for(std::chrono::seconds(1));   // add delay and wait for feedback
-            if (!connector_lock_confirmed) {
+            write_to_serial("set_connector_lock",1);
+
+            if (!verifyLockState(1)) {
                 EVLOG_error << "connector lock not closing";
-                //const std::string oldEvent = types::ev_board_support::ev_cp_state_to_string(cp_state_);
-                //publish_bsp_event(types::board_support_common::BspEvent:: string_to_event(oldEvent)); // publish previous state
-                return;
+                return;  // this avoids the update_power_state call. I.e. no power can be switched on if the lock does not work.
             }
         }
         if (cp_state == types::ev_board_support::EvCpState::C ||
-            cp_state == types::ev_board_support::EvCpState::D) {
-            write_to_serial("set_state_c:1");                   // enable mosfet, to pull Cp down
+            cp_state == types::ev_board_support::EvCpState::D) {           
+            write_to_serial("set_state_c",1);            // enable mosfet, to pull Cp down
             // note that the contactors are not enabled here, as this is also dependent on allow_power_on
             // this is checked by the update_power_state method called at the end of this scope
         }
         else  {
-            write_to_serial("set_state_c:0");
+            write_to_serial("set_state_c",0);
         }
+        cp_state_ = cp_state;
+        update_power_state(); // is executed AFTER commands for locking connector and set_state_c were successfull
 
-     } else { //if (cp_state == types::ev_board_support::EvCpState::E) {
-        // short of Cp to PE (connection lost)
-        // unlock connector instantly
-        write_to_serial("set_state_c:0");
-        if (connector_lock_confirmed) { // check if connector is unlocked already, as it could damage the motor
-            write_to_serial("set_connector_lock:0");
-            std::this_thread::sleep_for(std::chrono::seconds(1));
-            if (connector_lock_confirmed) {
+     } else { 
+        // in all other states disconnect
+        // for instance state E would mean:
+        // short of Cp to PE (connection lost), unlock connector instantly
+        write_to_serial("set_state_c",0);
+
+        cp_state_ = cp_state;
+        update_power_state();   // here it is executed, BEFORE trying to unlock the cable
+
+        if (connector_lock_confirmed) { // check if connector is unlocked already, as it would damage the motor actuator
+            write_to_serial("set_connector_lock",0);
+            if (!verifyLockState(0)) {
                 EVLOG_error << "connector lock not opening";
+                // this clause is dealing with shutting down. Despite a potential lock error the Cp state is not altered because of the following:
+                // A locked connector is no safety hazard, while a unlocked one is. 
+                // In case of serious error (state E) the system should be powered down quickly. 
+                // Reverting back into e.g. state C, but with undefined lock behaviour does not seem like a good idea.
             }
         }
      }
-    
-    cp_state_ = cp_state;
-    update_power_state();
 }
 
 void ev_board_supportImpl::handle_allow_power_on(bool& value) {
     allow_power_on_ = value;
+    EVLOG_info << "allow power on: " << value;
     if (!allow_power_on_) {
         // send msg to disable relays
-        write_to_serial("set_contactor:0");
+        write_to_serial("set_contactor",0);
     }
     update_power_state();
 }
