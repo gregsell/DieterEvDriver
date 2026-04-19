@@ -64,12 +64,12 @@ private:
     // The last instance in the chain, the MCU, is supposed to keep track of states.
     // as this is not the case (for Dieter) we do that here. E.g. YetiEvDriver handles this differently
     bool allow_power_on_{false};
-    bool connector_lock_confirmed {false};
+    bool connector_lock_confirmed_ {false};
     types::ev_board_support::EvCpState cp_state_{types::ev_board_support::EvCpState::A};
     int cp_duty_cycle_{0};
 
-    std::atomic<bool> running{false};
-    std::atomic<bool> serial_port_ready{false};
+    std::atomic<bool> running_{false};
+    std::atomic<bool> serial_port_ready_{false};
     boost::asio::io_context io_ctx_;
     std::unique_ptr<boost::asio::serial_port> serial_port_;
     std::thread serial_thread_;

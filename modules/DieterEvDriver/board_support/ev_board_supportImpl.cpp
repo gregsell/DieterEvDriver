@@ -33,7 +33,7 @@ namespace board_support {
 void ev_board_supportImpl::write_to_serial(const std::string& key, int value) {
     const std::string msg = trim(key) + ":" + std::to_string(value) +"\n";
 
-    if (!serial_port_ready) {
+    if (!serial_port_ready_) {
         EVLOG_info << "Ignoring write, serial port not ready: " << msg;
         return;
     }
@@ -57,7 +57,7 @@ void ev_board_supportImpl::write_to_serial(const std::string& msg42) {
         EVLOG_error << "invalid message synax: " << msg;
         return;
     }
-    if (!serial_port_ready) {
+    if (!serial_port_ready_) {
         EVLOG_info << "Ignoring write, serial port not ready: " << msg;
         return;
     }
@@ -75,7 +75,7 @@ void ev_board_supportImpl::write_to_serial(const std::string& msg42) {
 
 void ev_board_supportImpl::update_power_state() {
     types::board_support_common::BspEvent bspe;
-    if (allow_power_on_ && connector_lock_confirmed && (cp_state_ == types::ev_board_support::EvCpState::C
+    if (allow_power_on_ && connector_lock_confirmed_ && (cp_state_ == types::ev_board_support::EvCpState::C
                                                     ||  cp_state_ == types::ev_board_support::EvCpState::D)) {
         bspe.event = types::board_support_common::Event::PowerOn;
         write_to_serial("set_contactor",1);
@@ -91,7 +91,7 @@ bool ev_board_supportImpl::verifyLockState(bool lockState) {
     const auto timeout = std::chrono::milliseconds(2000);
 
     while (true) {
-        if (lockState == connector_lock_confirmed) {
+        if (lockState == connector_lock_confirmed_) {
             return true;
         }
         auto now = std::chrono::steady_clock::now();
@@ -125,7 +125,7 @@ void ev_board_supportImpl::on_serial_line(const std::string& raw) {
             }
         }
         else if (key.compare("connector_lock_confirmed") == 0) {
-            connector_lock_confirmed = (std::stoi(value) != 0);                     // update state var        
+            connector_lock_confirmed_ = (std::stoi(value) != 0);                     // update state var        
         }
     } catch (...) {
         EVLOG_error << "could not parse line: " << line;
@@ -133,7 +133,7 @@ void ev_board_supportImpl::on_serial_line(const std::string& raw) {
 }   
 
 void ev_board_supportImpl::serial_reader_thread() {
-    while (running) { // outer while-loop implements auto-reconnect
+    while (running_) { // outer while-loop implements auto-reconnect
     int serial_fail_count = 0;
         try {
              EVLOG_info << "Attempting to open serial port " << mod->config.serial_port << " at " << mod->config.baud_rate << " baud...";
@@ -146,12 +146,12 @@ void ev_board_supportImpl::serial_reader_thread() {
             serial_port_->set_option(boost::asio::serial_port_base::flow_control(boost::asio::serial_port_base::flow_control::none));
 
             EVLOG_info << "Serial port successfully opened.";
-            serial_port_ready = true;
+            serial_port_ready_ = true;
 
             std::string rx_buffer;
             std::vector<char> read_buf(256);
 
-            while (running) {
+            while (running_) {
                 boost::system::error_code ec;
                 size_t n = serial_port_->read_some(boost::asio::buffer(read_buf), ec);
                 if (ec) {
@@ -172,7 +172,7 @@ void ev_board_supportImpl::serial_reader_thread() {
             EVLOG_error << "Serial port error: " << e.what();
         }
         // in case of error the connection aborts, port is closed, short wait and reconnect
-        serial_port_ready = false;
+        serial_port_ready_ = false;
         if (serial_port_ && serial_port_->is_open()) {
             boost::system::error_code ignore_ec;
             serial_port_->close(ignore_ec); // clangd warning regarding unused return object wrong
@@ -183,7 +183,7 @@ void ev_board_supportImpl::serial_reader_thread() {
                 mod->p_board_support->error_factory->create_error(
                     "generic/CommunicationFault", "", "Serial port repeatedly unavailable"));
         }
-        if (running) std::this_thread::sleep_for(std::chrono::seconds(3)); // wait after serial comm. error
+        if (running_) std::this_thread::sleep_for(std::chrono::seconds(3)); // wait after serial comm. error
     }
 
     EVLOG_info << "Serial reader thread finished.";
@@ -206,7 +206,7 @@ void ev_board_supportImpl::publish_all_var() {  // publish all VAR as defined he
 }
 
 void ev_board_supportImpl::init() {
-    running = true;
+    running_ = true;
     serial_thread_ = std::thread(&ev_board_supportImpl::serial_reader_thread, this); 
     EVLOG_info << "init";
 }
@@ -231,7 +231,7 @@ void ev_board_supportImpl::handle_set_cp_state(types::ev_board_support::EvCpStat
         cp_state == types::ev_board_support::EvCpState::C ||
         cp_state == types::ev_board_support::EvCpState::D) {
         // lock connector
-        if (!connector_lock_confirmed) {    // check if connector is locked already, as it could damage the motor
+        if (!connector_lock_confirmed_) {    // check if connector is locked already, as it could damage the motor
             write_to_serial("set_connector_lock",1);
 
             if (!verifyLockState(1)) {
@@ -260,7 +260,7 @@ void ev_board_supportImpl::handle_set_cp_state(types::ev_board_support::EvCpStat
         cp_state_ = cp_state;
         update_power_state();   // here it is executed, BEFORE trying to unlock the cable
 
-        if (connector_lock_confirmed) { // check if connector is unlocked already, as it would damage the motor actuator
+        if (connector_lock_confirmed_) { // check if connector is unlocked already, as it would damage the motor actuator
             write_to_serial("set_connector_lock",0);
             if (!verifyLockState(0)) {
                 EVLOG_error << "connector lock not opening";
@@ -300,7 +300,7 @@ void ev_board_supportImpl::handle_set_rcd_error(double& rcd_current_mA) {
 }
 
 ev_board_supportImpl::~ev_board_supportImpl() {
-    running = false;
+    running_ = false;
 
     if (serial_port_ && serial_port_->is_open()) {
         boost::system::error_code ignore_ec;
