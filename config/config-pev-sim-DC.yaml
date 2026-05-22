@@ -6,7 +6,7 @@ active_modules:
     connections: {}
     config_module:
       baud_rate: 19200
-      serial_port: /dev/ttyACM0
+      serial_port: /dev/ttyUSB0
   EvManager0:
     module: EvManager
     connections:
@@ -27,6 +27,8 @@ active_modules:
       auto_enable: true
       auto_exec: true
       auto_exec_commands: 'sleep 2;iso_wait_pwm_is_running;iso_wait_slac_matched;iso_start_v2g_session DC;iso_wait_pwr_ready;iso_dc_power_on;iso_wait_for_stop 3600;unplug'
+      #works for AC: 
+      #auto_exec_commands: 'sleep 2;iec_wait_pwr_ready;draw_power_regulated 16,1;sleep 30;unplug'
       auto_exec_infinite: false
       connector_id: 1
       dc_discharge_max_current_limit: 300
@@ -52,7 +54,8 @@ active_modules:
     module: PyEvJosev
     connections: {}
     config_module:
-      device: eth0
+      # NMA Adapter: enx00e04c70c170, home Adapter: enx000acd2d04f2
+      device: enx000acd2d04f2 
       enable_tls_1_3: false
       enforce_tls: false
       is_cert_install_needed: false
@@ -73,6 +76,7 @@ active_modules:
     connections: {}
     config_implementation:
       main:
+        # enx000acd2d04f2
         device: eth0
         set_key_timeout_ms: 500
 x-module-layout:
