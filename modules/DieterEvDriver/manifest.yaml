@@ -1,4 +1,4 @@
-description: EV board support over UART based on uhi22/dieter hardware
+description: EV board support over UART for XXX
 
 config:
   serial_port:
