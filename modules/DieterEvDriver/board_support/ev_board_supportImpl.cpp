@@ -12,8 +12,6 @@
 
 // helper namespace
 namespace {
-
-// Helper: check if string starts with prefix
 bool starts_with(const std::string& s, const char* pfx) {
     return s.rfind(pfx, 0) == 0;
 }
@@ -24,7 +22,6 @@ std::string trim(const std::string& s) {
     while (b > a && std::isspace(static_cast<unsigned char>(s[b - 1]))) --b;
     return s.substr(a, b - a);
 }
-
 }
 
 namespace module {
@@ -33,30 +30,6 @@ namespace board_support {
 void ev_board_supportImpl::write_to_serial(const std::string& key, int value) {
     const std::string msg = trim(key) + ":" + std::to_string(value) +"\n";
 
-    if (!serial_port_ready_) {
-        EVLOG_info << "Ignoring write, serial port not ready: " << msg;
-        return;
-    }
-    if (serial_port_ && serial_port_->is_open()) {
-        EVLOG_info << "TX: " << msg;
-        boost::system::error_code ec;
-        boost::asio::write(*serial_port_, boost::asio::buffer(msg), ec);
-        if (ec) {
-            EVLOG_error << "Serial write failed: " << ec.message();
-        }
-    } else {
-        EVLOG_error << "TX FAILED, port is unexpectedly closed for msg: " << msg;
-    }
-}
-
-[[deprecated("easily causes syntax issues, replaced by overload with key and value")]]
-void ev_board_supportImpl::write_to_serial(const std::string& msg42) {
-    std::string msg = msg42 + "\n";   // ARRGHHH
-    
-    if ((msg.back() != '\n') && (msg.find(':') != std::string::npos)) { // check if colon exists and is newline -terminated
-        EVLOG_error << "invalid message synax: " << msg;
-        return;
-    }
     if (!serial_port_ready_) {
         EVLOG_info << "Ignoring write, serial port not ready: " << msg;
         return;
@@ -112,7 +85,7 @@ void ev_board_supportImpl::on_serial_line(const std::string& raw) {
     // extract key
     std::string key = line.substr(0, pos_separator);
     std::string value = line.substr(pos_separator+1, line.length());
-    //EVLOG_info << "found key: " << key << " and value: " << value;
+    EVLOG_verbose << "found key: " << key << " and value: " << value;
 
     try{
         if (key.compare("cp_duty_cycle") == 0) {
@@ -132,7 +105,7 @@ void ev_board_supportImpl::on_serial_line(const std::string& raw) {
     }
 }   
 
-void ev_board_supportImpl::serial_reader_thread() {
+void ev_board_supportImpl::serial_reader_thread() { 
     while (running_) { // outer while-loop implements auto-reconnect
     int serial_fail_count = 0;
         try {
@@ -177,7 +150,7 @@ void ev_board_supportImpl::serial_reader_thread() {
             boost::system::error_code ignore_ec;
             serial_port_->close(ignore_ec); // clangd warning regarding unused return object wrong
         }
-        // in serial_reader_thread(), nach dem catch-Block:
+
         if (++serial_fail_count > 5) {
             mod->p_board_support->raise_error(
                 mod->p_board_support->error_factory->create_error(
@@ -192,7 +165,7 @@ void ev_board_supportImpl::serial_reader_thread() {
 void ev_board_supportImpl::publish_all_var() {  // publish all VAR as defined here: https://everest.github.io/nightly/reference/interfaces/ev_board_support.html#ev-board-support
     types::board_support_common::BspMeasurement bspm;          
     bspm.cp_pwm_duty_cycle = cp_duty_cycle_;
-    bspm.proximity_pilot = {types::board_support_common::Ampacity::None};// This is not implemented on MCU side
+    bspm.proximity_pilot = {types::board_support_common::Ampacity::A_13};// This is not implemented on MCU side
     publish_bsp_measurement(bspm);  
 
     types::board_support_common::BspEvent bspe;
@@ -223,9 +196,7 @@ void ev_board_supportImpl::handle_enable(bool& value) {
 }
 
 void ev_board_supportImpl::handle_set_cp_state(types::ev_board_support::EvCpState& cp_state) {
-    //if (cp_state == cp_state_) return; // gute oder schlechte Idee?
     EVLOG_info << "change c_p state from " << cp_state_ << " to " << cp_state;
-    //types::ev_board_support::EvCpState prev_state = cp_state; // backup s
 
     if (cp_state == types::ev_board_support::EvCpState::B ||
         cp_state == types::ev_board_support::EvCpState::C ||
@@ -253,21 +224,20 @@ void ev_board_supportImpl::handle_set_cp_state(types::ev_board_support::EvCpStat
 
      } else { 
         // in all other states disconnect
-        // for instance state E would mean:
-        // short of Cp to PE (connection lost), unlock connector instantly
+        // for instance state E would mean: short of Cp to PE (connection lost), unlock connector instantly
         write_to_serial("set_state_c",0);
 
         cp_state_ = cp_state;
         update_power_state();   // here it is executed, BEFORE trying to unlock the cable
-
+        
         if (connector_lock_confirmed_) { // check if connector is unlocked already, as it would damage the motor actuator
             write_to_serial("set_connector_lock",0);
             if (!verifyLockState(0)) {
                 EVLOG_error << "connector lock not opening";
-                // this clause is dealing with shutting down. Despite a potential lock error the Cp state is not altered because of the following:
+                // Despite a potential lock error the Cp state is not altered because of the following:
                 // A locked connector is no safety hazard, while a unlocked one is. 
-                // In case of serious error (state E) the system should be powered down quickly. 
                 // Reverting back into e.g. state C, but with undefined lock behaviour does not seem like a good idea.
+                // in a realistic scenario a manual mechanical unlock would be necessary
             }
         }
      }
@@ -277,7 +247,6 @@ void ev_board_supportImpl::handle_allow_power_on(bool& value) {
     allow_power_on_ = value;
     EVLOG_info << "allow power on: " << value;
     if (!allow_power_on_) {
-        // send msg to disable relays
         write_to_serial("set_contactor",0);
     }
     update_power_state();
