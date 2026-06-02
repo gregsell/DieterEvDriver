@@ -7,7 +7,7 @@ The EVerest PEV Simulator project documentation is split in two repositories:
 
 ## Overview
 This project simulates a plug-in EV communicating over CCS with a charging station. It replaces the vehicle with a hardware/software stack that speaks the same protocols:
-- **IEC 61851** – Control Pilot (CP) state machine (States A–D, PWM duty cycle)
+- **IEC 61851** – Control Pilot (CP) state machine (States A–F, PWM duty cycle)
 - **ISO 15118-2** – High-Level Communication (HLC) over Power Line Communication (PLC)
 - **DIN SPEC 70121** – Older DC HLC variant (supported by EVerest/Josev)
 
@@ -18,14 +18,14 @@ The software stack is built on [EVerest](https://everest.github.io/), the open-s
 The module `EvManager` is the central connector. `EvSlac` handles the PLC via a homeplug modem and `pyEvJosev` simulates a car. `DieterEvDriver` implements the `ev_board_support` interface, which is required by `EvManager`.
 
 ## How to use
-### Preconditions
+### Prerequisites
 - EVerest installed according to [documentation](https://everest.github.io/nightly/how-to-guides/getting-started/get-started-sw.html)
 - A "Dieter" (compatible) hardware board connected via USB
 - A HomePlug PLC modem (patched as EV) (more info [here](https://github.com/uhi22/pyPLC/blob/master/doc/hardware.md))
 
 **environment variables:**
 - `$EVEREST_WORKSPACE` : points to `everest-cmake`
-- `$PROJECT_DIR`: location of DieterEvDriver
+- `$EVEREST_PROJECT_DIR`: location of DieterEvDriver
 
 ### Build
 ``` bash
@@ -59,7 +59,7 @@ both can be checked with the following respective commands:
 ls /dev/tty*
 nmcli d
 ```
-#### Restrict NeworkManager
+#### Restrict NetworkManager
 As soon as the modem is plugged in, `NetworkManager` tries to assign an IP address via DHCP. This causes problems, because `EvSlac` handles the communication setup by itself.  
 The solution is to configure the `NetworkManager` to ignore the respective interface. This can be done by
 ```bash
@@ -70,9 +70,9 @@ unmanaged-devices=mac:<mac>
 and restarting the interface with 
 `ip link set up <iface>`
 
-The mac can be retrieved using [open-plc-utils](https://github.com/qca/open-plc-utils).
+The mac can be retrieved using `ip link show`.
 
 ### Run
-For each run configuration EVerest generates a run script, if defined in `config/CMakeLists.txt`. The run scripts are located in `build/run-<name>.sh`
+For each run configuration EVerest generates a run script, if defined in `config/CMakeLists.txt`. The run scripts are located in `build/run-<name>.sh` and start the central `manager` process.
 
-For inspecting traffic [MQTT Explorer](https://mqtt-explorer.com/) and Wireshark can be used.
+For inspecting traffic [MQTT Explorer](https://mqtt-explorer.com/) and Wireshark using the [dsV2Gshark](https://github.com/dspace-group/dsV2Gshark/) plugin.
