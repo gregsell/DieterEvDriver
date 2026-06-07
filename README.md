@@ -61,18 +61,21 @@ nmcli d
 ```
 #### Restrict NetworkManager
 As soon as the modem is plugged in, `NetworkManager` tries to assign an IP address via DHCP. This causes problems, because `EvSlac` handles the communication setup by itself.  
-The solution is to configure the `NetworkManager` to ignore the respective interface. This can be done by
+The solution is to configure the `NetworkManager` to ignore the respective interface. This can be done with
 ```bash
 # /etc/NetworkManager/conf.d/homeplug-unmanaged.conf
 [keyfile]
 unmanaged-devices=mac:<mac>
 ```
-and restarting the interface with 
-`ip link set up <iface>`
-
+after that restart `NetworkManager`and bring interface in `UP` state: 
+```bash
+sudo systemctl restart NetworkManager
+sudo ip link set <iface> up
+```
 The mac can be retrieved using `ip link show`.
+After these steps the state of the interface should be `unmanaged`. This can be checked using `nmcli devices`.
 
 ### Run
 For each run configuration EVerest generates a run script, if defined in `config/CMakeLists.txt`. The run scripts are located in `build/run-<name>.sh` and start the central `manager` process.
 
-For inspecting traffic [MQTT Explorer](https://mqtt-explorer.com/) and Wireshark using the [dsV2Gshark](https://github.com/dspace-group/dsV2Gshark/) plugin.
+For inspecting traffic [MQTT Explorer](https://mqtt-explorer.com/) can be used and Wireshark with the [dsV2Gshark](https://github.com/dspace-group/dsV2Gshark/) plugin.
