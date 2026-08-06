@@ -75,6 +75,16 @@ sudo ip link set <iface> up
 The mac can be retrieved using `ip link show`.
 After these steps the state of the interface should be `unmanaged`. This can be checked using `nmcli devices`.
 
+#### Elevate EvSlac Capabilities
+In case you run into this error:
+```
+[ERRO] EvSlac0:EvSlac  void module::main::ev_slacImpl::run() :: Couldn't open device <iface> for SLAC communication. Reason: Couldn't create the socket: Operation not permitted
+```
+SLAC needs a raw ethernet socket. This can be achieved by assigning the necessary [Linux Capabilities](https://www.baeldung.com/linux/set-modify-capability-permissions) to the `EvSlac` binary.
+``` bash
+sudo setcap cap_net_raw,cap_net_admin=eip \
+$EVEREST_PROJECT_DIR/dist/libexec/everest/modules/EvSlac/EvSlac
+```
 ### Run
 For each run configuration EVerest generates a run script, if defined in `config/CMakeLists.txt`. The run scripts are located in `build/run-<name>.sh` and start the central `manager` process.
 
