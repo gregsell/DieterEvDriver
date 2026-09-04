@@ -1,0 +1,12 @@
+## Purpose
+Yocto/OpenEmbedded build configuration for the CCS PEV simulator target
+image. Builds a custom EVerest-based Linux image for Raspberry Pi 3B+.
+built with target 'core-image-full-cmdline'
+
+## Notes
+- SSH: no openssh/dropbear package appears in IMAGE_INSTALL:append, but
+  none is needed here -- core-image-full-cmdline ships OpenSSH by
+  default as part of the image definition itself
+- WiFi kernel modules and the hostapd/dnsmasq hotspot stack are NOT in
+  local.conf, but are added via meta-pev_sim's own
+  core-image-full-cmdline.bbappend
