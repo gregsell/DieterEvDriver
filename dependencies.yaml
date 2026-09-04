@@ -1,4 +1,4 @@
 ---
 everest-core:
-  git: https://github.com/EVerest/everest-core.git
-  git_tag: main
+  git: https://github.com/EVerest/EVerest.git
+  git_tag: ab493cc97faa5788aab4fbdebeb72d3fb1fa564d
