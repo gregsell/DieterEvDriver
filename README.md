@@ -15,7 +15,7 @@ The software stack is built on [EVerest](https://everest.github.io/), the open-s
 Additionally, a custom embedded linux image was developed including all necessary packages.
 
 ### Hardware setup
-![building a box](results/PEV_sim_box_build_annotated.png)
+![building a box](results/PEV_sim_box_build_annotated.jpg)
 
 ## Architecture
 ![sw arch](/docs/sys_arch_sw.jpg)
@@ -52,11 +52,7 @@ DieterEvDriver:
 EvSlac:
   config_module:
     device: eth1
-<<<<<<< Updated upstream
-  
-=======
 ...
->>>>>>> Stashed changes
 # the same for pyEvJosev
 PyEvJosev:
     config_module:
