@@ -1,7 +1,7 @@
 # EVerest PEV simulator
 The EVerest PEV Simulator project documentation is split in two repositories:
 1. this repo: EVerest software running on linux
-2. electronics and firmware of the "Dieter" handling low level communication - *" Device Interface ElecTronic Especially not limited to Raspberry"*, available here: [gregsell/XXX]()
+2. electronics and firmware of the "Dieter" handling low level communication - *" Device Interface ElecTronic Especially not limited to Raspberry"*, available here: [gregsell/Dieter_PEV_Simulator](https://github.com/gregsell/Dieter_PEV_Simulator)
 
 *add reference to whole BA?*
 
@@ -11,13 +11,14 @@ This project simulates a plug-in EV communicating over CCS with a charging stati
 - **ISO 15118-2** – High-Level Communication (HLC) over Power Line Communication (PLC)
 - **DIN SPEC 70121** – Older DC HLC variant (supported by EVerest/Josev)
 
-The software stack is built on [EVerest](https://everest.github.io/), the open-source EV charging framework initiated by PIONIX. EVerest handles the protocol state machines; The module `DieterEvDriver` bridges EVerest to the Dieter hardware board via a serial interface. 
+The software stack is built on [EVerest](https://everest.github.io/), the open-source EV charging framework initiated by PIONIX. EVerest handles the protocol state machines; The module `DieterEvDriver` bridges EVerest to the Dieter hardware board via a serial interface.  
+Additionally, a custom embedded linux image was developed including all necessary packages.
 
 ## Architecture
 ![sw arch](/docs/sys_arch_sw.jpg)
 The module `EvManager` is the central connector. `EvSlac` handles the PLC via a homeplug modem and `pyEvJosev` simulates a car. `DieterEvDriver` implements the `ev_board_support` interface, which is required by `EvManager`.
 
-## How to use
+## Option 1: 'bare metal' installation 
 ### Prerequisites
 - EVerest installed according to [documentation](https://everest.github.io/nightly/how-to-guides/getting-started/get-started-sw.html)
 - A "Dieter" (compatible) hardware board connected via USB
@@ -48,7 +49,7 @@ DieterEvDriver:
 EvSlac:
   config_module:
     device: eth1
-
+  
 # the same for pyEvJosev
 PyEvJosev:
     config_module:
@@ -60,19 +61,18 @@ ls /dev/tty*
 nmcli d
 ```
 #### Restrict NetworkManager
-As soon as the modem is plugged in, `NetworkManager` tries to assign an IP address via DHCP. This causes problems, because `EvSlac` handles the communication setup by itself.  
+As soon as the ethernet interface of the PLC modem is active, `NetworkManager` tries to assign an IP address via DHCP. This causes problems, because `EvSlac` handles the communication setup by itself.  
 The solution is to configure the `NetworkManager` to ignore the respective interface. This can be done with
 ```bash
 # /etc/NetworkManager/conf.d/homeplug-unmanaged.conf
 [keyfile]
-unmanaged-devices=mac:<mac>
+unmanaged-devices=interface-name:<iface>
 ```
 after that restart `NetworkManager`and bring interface in `UP` state: 
 ```bash
 sudo systemctl restart NetworkManager
 sudo ip link set <iface> up
 ```
-The mac can be retrieved using `ip link show`.
 After these steps the state of the interface should be `unmanaged`. This can be checked using `nmcli devices`.
 
 #### Elevate EvSlac Capabilities
@@ -89,3 +89,42 @@ $EVEREST_PROJECT_DIR/dist/libexec/everest/modules/EvSlac/EvSlac
 For each run configuration EVerest generates a run script, if defined in `config/CMakeLists.txt`. The run scripts are located in `build/run-<name>.sh` and start the central `manager` process.
 
 For inspecting traffic [MQTT Explorer](https://mqtt-explorer.com/) can be used and Wireshark with the [dsV2Gshark](https://github.com/dspace-group/dsV2Gshark/) plugin.
+
+## Option 2: building a custom firmware image
+Repeating the above steps is error-prone and will lead to different results at different points in time.
+Additionally, building everything from source is not an option for embedded systems.  
+Both issues can be addressed by building a custom firmware image with bitbake using the yocto project.  
+
+For the PEV Simulator project the bitbake layer `meta-pev-sim` was created, available under [/yocto/scarthgap/meta-pev-sim.](https://github.com/gregsell/DieterEvDriver/tree/main/yocto/scarthgap/meta-pev_sim)
+It installs the necessary software packages and configures the system in advance.
+
+Specifically, it takes care of the following:
+- installation of the necessary kernel modules and drivers for e.g. wifi
+- simple network configuration: ssh capable wifi AP for easy remote access
+- system-wide installation of EVerest (duh), the new module `DieterEvDriver` and `mosquitto`
+- tshark for debugging
+
+For configuring bitbake typically a `local.conf` is used, wich is available under [docs/yocto_conf/conf/local.conf](https://github.com/gregsell/DieterEvDriver/blob/main/docs/yocto_conf/conf/local.conf)  
+The following layers are used (`bblayers.conf`):
+``` conf
+# POKY_BBLAYERS_CONF_VERSION is increased each time build/conf/bblayers.conf
+# changes incompatibly
+POKY_BBLAYERS_CONF_VERSION = "2"
+
+BBPATH = "${TOPDIR}"
+BBFILES ?= ""
+
+BBLAYERS ?= " \
+  /home/schlumpf/yocto-everest/poky/meta \
+  /home/schlumpf/yocto-everest/poky/meta-poky \
+  /home/schlumpf/yocto-everest/poky/meta-yocto-bsp \
+  /home/schlumpf/yocto-everest/poky/meta-openembedded/meta-oe \
+  /home/schlumpf/yocto-everest/poky/meta-openembedded/meta-python \
+  /home/schlumpf/yocto-everest/poky/meta-openembedded/meta-networking \
+  /home/schlumpf/yocto-everest/poky/meta-raspberrypi \
+  /home/schlumpf/yocto-everest/poky/meta-everest \
+  /home/schlumpf/yocto-everest/poky/meta-pev_sim \
+  /home/schlumpf/yocto-everest/poky/meta-openjdk-temurin \
+  "
+```
+In this project a raspberry pi 3b+ was used. A precompiled image is available under 'Releases'. 
