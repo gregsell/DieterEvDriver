@@ -1,0 +1,127 @@
+./run-pev-sim-DC.sh 
+2026-08-05 17:07:33.299927 [INFO] manager          ::   ________      __                _   
+2026-08-05 17:07:33.300237 [INFO] manager          ::  |  ____\ \    / /               | |
+2026-08-05 17:07:33.300277 [INFO] manager          ::  | |__   \ \  / /__ _ __ ___  ___| |_
+2026-08-05 17:07:33.300306 [INFO] manager          ::  |  __|   \ \/ / _ \ '__/ _ \/ __| __|
+2026-08-05 17:07:33.300334 [INFO] manager          ::  | |____   \  /  __/ | |  __/\__ \ |_
+2026-08-05 17:07:33.300368 [INFO] manager          ::  |______|   \/ \___|_|  \___||___/\__|
+2026-08-05 17:07:33.300400 [INFO] manager          :: 
+2026-08-05 17:07:33.300429 [INFO] manager          :: everest-framework 0.25.0 main@2026.02.0-rc2-27-gd7497ef6
+2026-08-05 17:07:33.300456 [INFO] manager          :: PEV-SIM 0.1 main@b0e0c5d-dirty
+2026-08-05 17:07:33.300479 [INFO] manager          :: 
+2026-08-05 17:07:33.300506 [INFO] manager          :: Using MQTT broker localhost:1883
+2026-08-05 17:07:33.300543 [INFO] manager          :: Telemetry enabled
+2026-08-05 17:07:33.307223 [INFO] everest_ctrl     :: Launching controller service on port 8849
+2026-08-05 17:07:33.423514 [INFO] manager          :: Boot mode is set to YamlFile, loading module configs from YAML file
+2026-08-05 17:07:33.423613 [INFO] manager          :: Loading config file at: /home/gregor-sellschopp/everest/NMA_PEV_SIM/config/config-pev-sim-DC.yaml
+2026-08-05 17:07:33.521834 [INFO] manager          :: Config loading completed in 219ms
+2026-08-05 17:07:33.523999 [INFO] manager          :: Starting 5 modules
+2026-08-05 17:07:34.206337 [INFO] Store0:Store     :: Module Store0 initialized [646ms]
+2026-08-05 17:07:34.213671 [INFO] EvSlac0:EvSlac   :: Module EvSlac0 initialized [645ms]
+2026-08-05 17:07:34.235985 [INFO] DieterEvDriver_  :: Attempting to open serial port /dev/ttyUSB0 at 19200 baud...
+2026-08-05 17:07:34.235820 [INFO] DieterEvDriver_  :: init
+2026-08-05 17:07:34.237141 [INFO] DieterEvDriver_  :: Module DieterEvDriver_instance initialized [691ms]
+2026-08-05 17:07:34.238127 [INFO] DieterEvDriver_  :: Serial port successfully opened.
+2026-08-05 17:07:34.240605 [INFO] EvManager0:EvMa  :: Module EvManager0 initialized [687ms]
+2026-08-05 17:07:34.792911 [INFO] PyEvJosev0       :: Module PyEvJosev0 initialized [597ms]
+2026-08-05 17:07:34.793788 [INFO] manager          :: Clearing retained topics published by manager during startup
+2026-08-05 17:07:34.794238 [INFO] manager          :: 🚙🚙🚙 All modules are initialized. EVerest up and running [1503ms] 🚙🚙🚙
+2026-08-05 17:07:34.795130 [WARN] EvSlac0:EvSlac  void Everest::Everest::handle_ready(const Everest::json&) :: Ignoring repeated everest ready signal (possibly triggered by restarting a standalone module)!
+2026-08-05 17:07:34.796351 [INFO] DieterEvDriver_  :: ready
+2026-08-05 17:07:34.802269 [INFO] EvSlac0:EvSlac   :: EvSlac: Starting the SLAC state machine
+2026-08-05 17:07:34.802597 [INFO] EvSlac0:EvSlac   :: EvSlac: Entered Reset state
+2026-08-05 17:07:34.802636 [INFO] EvSlac0:EvSlac   :: EvSlac: Called callback of ResetState
+2026-08-05 17:07:34.842400 [INFO] DieterEvDriver_  :: allow power on: false
+2026-08-05 17:07:34.842487 [INFO] DieterEvDriver_  :: TX: set_contactor:0
+2026-08-05 17:07:34.842532 [INFO] DieterEvDriver_  :: TX: set_contactor:0
+2026-08-05 17:07:34.885994 [INFO] DieterEvDriver_  :: handle_set_ac_max_current: 16
+2026-08-05 17:07:34.930895 [INFO] DieterEvDriver_  :: handle_set_three_phases: false
+2026-08-05 17:07:34.972906 [INFO] DieterEvDriver_  :: handle_enable: true
+2026-08-05 17:07:34.973200 [INFO] DieterEvDriver_  :: published bsp_measurement: {
+    "cp_pwm_duty_cycle": 0.0,
+    "proximity_pilot": {
+        "ampacity": "A_13"
+    }
+}
+2026-08-05 17:07:34.973277 [INFO] DieterEvDriver_  :: published bsp_event: {
+    "event": "A"
+}
+2026-08-05 17:07:35.242421 [INFO] DieterEvDriver_  :: change c_p state from A to A
+2026-08-05 17:07:35.242503 [INFO] DieterEvDriver_  :: TX: set_state_c:0
+2026-08-05 17:07:35.242560 [INFO] DieterEvDriver_  :: TX: set_contactor:0
+2026-08-05 17:07:35.284658 [INFO] DieterEvDriver_  :: allow power on: false
+2026-08-05 17:07:35.284725 [INFO] DieterEvDriver_  :: TX: set_contactor:0
+2026-08-05 17:07:35.284779 [INFO] DieterEvDriver_  :: TX: set_contactor:0
+2026-08-05 17:07:42.505488 [INFO] EvSlac0:EvSlac   :: EvSlac: Called callback of ResetState
+2026-08-05 17:07:42.509923 [INFO] EvSlac0:EvSlac   :: EvSlac: Entered Reset state
+2026-08-05 17:07:42.518644 [INFO] EvSlac0:EvSlac   :: EvSlac: Called callback of ResetState
+2026-08-05 17:07:42.547980 [INFO] EvSlac0:EvSlac   :: EvSlac: Entered init state
+2026-08-05 17:07:42.561421 [INFO] EvSlac0:EvSlac   :: EvSlac: Entered init state
+2026-08-05 17:07:42.592292 [INFO] DieterEvDriver_  :: change c_p state from A to B
+2026-08-05 17:07:42.592390 [INFO] DieterEvDriver_  :: TX: set_connector_lock:1
+2026-08-05 17:07:42.622997 [INFO] EvSlac0:EvSlac   :: EvSlac: Received unexpected message while SOUNDING
+2026-08-05 17:07:42.642185 [INFO] EvSlac0:EvSlac   :: EvSlac: Received unexpected message while SOUNDING
+2026-08-05 17:07:42.662547 [INFO] EvSlac0:EvSlac   :: EvSlac: Received unexpected message while SOUNDING
+2026-08-05 17:07:42.681666 [INFO] EvSlac0:EvSlac   :: EvSlac: Received unexpected message while SOUNDING
+2026-08-05 17:07:42.701315 [INFO] EvSlac0:EvSlac   :: EvSlac: Received unexpected message while SOUNDING
+2026-08-05 17:07:42.720681 [INFO] EvSlac0:EvSlac   :: EvSlac: Received unexpected message while SOUNDING
+2026-08-05 17:07:42.740404 [INFO] EvSlac0:EvSlac   :: EvSlac: Received unexpected message while SOUNDING
+2026-08-05 17:07:42.760084 [INFO] EvSlac0:EvSlac   :: EvSlac: Received unexpected message while SOUNDING
+2026-08-05 17:07:42.780772 [INFO] EvSlac0:EvSlac   :: EvSlac: Received unexpected message while SOUNDING
+2026-08-05 17:07:42.800361 [INFO] EvSlac0:EvSlac   :: EvSlac: Received unexpected message after SOUNDING
+2026-08-05 17:07:42.804943 [INFO] EvSlac0:EvSlac   :: EvSlac: Entered MatchRequestState state
+2026-08-05 17:07:42.817743 [INFO] EvSlac0:EvSlac   :: EvSlac: Entered JoinNetwork state
+2026-08-05 17:07:42.822165 [INFO] EvSlac0:EvSlac   :: EvSlac: Entered matched state
+2026-08-05 17:07:43.098236 [INFO] DieterEvDriver_  :: TX: set_state_c:0
+2026-08-05 17:07:43.098329 [INFO] DieterEvDriver_  :: TX: set_contactor:0
+2026-08-05 17:07:43.140842 [INFO] DieterEvDriver_  :: allow power on: false
+2026-08-05 17:07:43.140908 [INFO] DieterEvDriver_  :: TX: set_contactor:0
+2026-08-05 17:07:43.140961 [INFO] DieterEvDriver_  :: TX: set_contactor:0
+2026-08-05 17:07:45.556876 [WARN] PyEvJosev0      pybind11_init_everestpy(pybind11::module_&)::<lambda(const std::string&)> :: A TimeoutError occurred. Waited for Timeouts.SDP_REQ s after sending an SDPRequest
+2026-08-05 17:07:45.807857 [WARN] PyEvJosev0      pybind11_init_everestpy(pybind11::module_&)::<lambda(const std::string&)> :: A TimeoutError occurred. Waited for Timeouts.SDP_REQ s after sending an SDPRequest
+2026-08-05 17:07:46.058808 [WARN] PyEvJosev0      pybind11_init_everestpy(pybind11::module_&)::<lambda(const std::string&)> :: A TimeoutError occurred. Waited for Timeouts.SDP_REQ s after sending an SDPRequest
+2026-08-05 17:07:46.309756 [WARN] PyEvJosev0      pybind11_init_everestpy(pybind11::module_&)::<lambda(const std::string&)> :: A TimeoutError occurred. Waited for Timeouts.SDP_REQ s after sending an SDPRequest
+2026-08-05 17:07:46.560775 [WARN] PyEvJosev0      pybind11_init_everestpy(pybind11::module_&)::<lambda(const std::string&)> :: A TimeoutError occurred. Waited for Timeouts.SDP_REQ s after sending an SDPRequest
+2026-08-05 17:07:46.811825 [WARN] PyEvJosev0      pybind11_init_everestpy(pybind11::module_&)::<lambda(const std::string&)> :: A TimeoutError occurred. Waited for Timeouts.SDP_REQ s after sending an SDPRequest
+2026-08-05 17:07:47.062824 [WARN] PyEvJosev0      pybind11_init_everestpy(pybind11::module_&)::<lambda(const std::string&)> :: A TimeoutError occurred. Waited for Timeouts.SDP_REQ s after sending an SDPRequest
+2026-08-05 17:07:47.313714 [WARN] PyEvJosev0      pybind11_init_everestpy(pybind11::module_&)::<lambda(const std::string&)> :: A TimeoutError occurred. Waited for Timeouts.SDP_REQ s after sending an SDPRequest
+2026-08-05 17:07:47.564840 [WARN] PyEvJosev0      pybind11_init_everestpy(pybind11::module_&)::<lambda(const std::string&)> :: A TimeoutError occurred. Waited for Timeouts.SDP_REQ s after sending an SDPRequest
+2026-08-05 17:07:47.815764 [WARN] PyEvJosev0      pybind11_init_everestpy(pybind11::module_&)::<lambda(const std::string&)> :: A TimeoutError occurred. Waited for Timeouts.SDP_REQ s after sending an SDPRequest
+2026-08-05 17:07:48.066657 [WARN] PyEvJosev0      pybind11_init_everestpy(pybind11::module_&)::<lambda(const std::string&)> :: A TimeoutError occurred. Waited for Timeouts.SDP_REQ s after sending an SDPRequest
+2026-08-05 17:07:48.317343 [WARN] PyEvJosev0      pybind11_init_everestpy(pybind11::module_&)::<lambda(const std::string&)> :: A TimeoutError occurred. Waited for Timeouts.SDP_REQ s after sending an SDPRequest
+2026-08-05 17:07:48.568275 [WARN] PyEvJosev0      pybind11_init_everestpy(pybind11::module_&)::<lambda(const std::string&)> :: A TimeoutError occurred. Waited for Timeouts.SDP_REQ s after sending an SDPRequest
+2026-08-05 17:07:48.819143 [WARN] PyEvJosev0      pybind11_init_everestpy(pybind11::module_&)::<lambda(const std::string&)> :: A TimeoutError occurred. Waited for Timeouts.SDP_REQ s after sending an SDPRequest
+2026-08-05 17:07:49.070040 [WARN] PyEvJosev0      pybind11_init_everestpy(pybind11::module_&)::<lambda(const std::string&)> :: A TimeoutError occurred. Waited for Timeouts.SDP_REQ s after sending an SDPRequest
+2026-08-05 17:07:49.320978 [WARN] PyEvJosev0      pybind11_init_everestpy(pybind11::module_&)::<lambda(const std::string&)> :: A TimeoutError occurred. Waited for Timeouts.SDP_REQ s after sending an SDPRequest
+2026-08-05 17:07:49.571935 [WARN] PyEvJosev0      pybind11_init_everestpy(pybind11::module_&)::<lambda(const std::string&)> :: A TimeoutError occurred. Waited for Timeouts.SDP_REQ s after sending an SDPRequest
+2026-08-05 17:07:57.498353 [INFO] DieterEvDriver_  :: change c_p state from B to C
+2026-08-05 17:07:57.498440 [INFO] DieterEvDriver_  :: TX: set_state_c:1
+2026-08-05 17:07:57.498496 [INFO] DieterEvDriver_  :: TX: set_contactor:0
+malloc(): unaligned tcache chunk detected
+2026-08-05 17:08:16.563832 [INFO] DieterEvDriver_  :: allow power on: true
+2026-08-05 17:08:16.563961 [INFO] DieterEvDriver_  :: TX: set_contactor:1
+2026-08-05 17:08:16.610686 [INFO] DieterEvDriver_  :: change c_p state from C to C
+2026-08-05 17:08:16.610792 [INFO] DieterEvDriver_  :: TX: set_state_c:1
+2026-08-05 17:08:16.610854 [INFO] DieterEvDriver_  :: TX: set_contactor:1
+2026-08-05 17:08:16.658609 [INFO] DieterEvDriver_  :: allow power on: true
+2026-08-05 17:08:16.65871
+9 [INFO] DieterEvDriver_  :: TX: set_contactor:1
+2026-08-05 17:09:43.432614 [INFO] EvManager0:EvMa  :: POWER OFF iso stopped
+2026-08-05 17:09:43.437521 [INFO] DieterEvDriver_  :: allow power on: false
+2026-08-05 17:09:43.437812 [INFO] DieterEvDriver_  :: TX: set_contactor:0
+2026-08-05 17:09:43.438065 [INFO] DieterEvDriver_  :: TX: set_contactor:0
+2026-08-05 17:09:43.540360 [INFO] DieterEvDriver_  :: change c_p state from C to A
+2026-08-05 17:09:43.542378 [INFO] DieterEvDriver_  :: TX: set_state_c:0
+2026-08-05 17:09:43.542759 [INFO] DieterEvDriver_  :: TX: set_contactor:0
+2026-08-05 17:09:43.543924 [INFO] DieterEvDriver_  :: TX: set_connector_lock:0
+2026-08-05 17:09:44.164880 [INFO] DieterEvDriver_  :: allow power on: false
+2026-08-05 17:09:44.165582 [INFO] DieterEvDriver_  :: TX: set_contactor:0
+2026-08-05 17:09:44.165861 [INFO] DieterEvDriver_  :: TX: set_contactor:0
+2026-08-05 17:09:44.222458 [INFO] EvManager0:EvMa  :: Finished simulation.
+2026-08-05 17:09:48.731580 [ERRO] PyEvJosev0      pybind11_init_everestpy(pybind11::module_&)::<lambda(const std::string&)> :: EVCC tried to initiate a V2GCommunicationSession, but maximum number of SDP retry cycles (1) is now reached. Shutting down high-level communication. Unplug and plug in the cable again if you want to start anew.
+Traceback (most recent call last):
+  File "/home/gregor-sellschopp/everest/NMA_PEV_SIM/build/venv/lib/python3.12/site-packages/iso15118/evcc/comm_session_handler.py", line 584, in get_from_rcv_queue
+    await self.restart_sdp(True)
+  File "/home/gregor-sellschopp/everest/NMA_PEV_SIM/build/venv/lib/python3.12/site-packages/iso15118/evcc/comm_session_handler.py", line 401, in restart_sdp
+    raise SDPFailedError(
+iso15118.shared.exceptions.SDPFailedError: EVCC tried to initiate a V2GCommunicationSession, but maximum number of SDP retry cycles (1) is now reached. Shutting down high-level communication. Unplug and plug in the cable again if you want to start anew.

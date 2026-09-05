@@ -1,0 +1,121 @@
+root@raspberrypi3-64:~# manager --config config-pev-sim-DC.yaml 
+[2025-05-29 19:42:11.109579] [0x0000007f9669a460] [info]    Manager state transition: Idle -> Initializing
+2025-05-29 19:42:11.113315 [INFO] manager          ::   ________      __                _   
+2025-05-29 19:42:11.113605 [INFO] manager          ::  |  ____\ \    / /               | |
+2025-05-29 19:42:11.113672 [INFO] manager          ::  | |__   \ \  / /__ _ __ ___  ___| |_
+2025-05-29 19:42:11.113731 [INFO] manager          ::  |  __|   \ \/ / _ \ '__/ _ \/ __| __|
+2025-05-29 19:42:11.113790 [INFO] manager          ::  | |____   \  /  __/ | |  __/\__ \ |_
+2025-05-29 19:42:11.113858 [INFO] manager          ::  |______|   \/ \___|_|  \___||___/\__|
+2025-05-29 19:42:11.113916 [INFO] manager          :: 
+2025-05-29 19:42:11.113974 [INFO] manager          :: everest-framework 0.25.0-dev list-306-g88f95585b
+2025-05-29 19:42:11.114029 [INFO] manager          :: everest-core 2026.10.0-dev list-306-g88f95585b
+2025-05-29 19:42:11.114087 [INFO] manager          :: 
+2025-05-29 19:42:11.114145 [INFO] manager          :: Using MQTT broker localhost:1883
+2025-05-29 19:42:11.114243 [INFO] manager          :: Telemetry enabled
+2025-05-29 19:42:11.116016 [INFO] manager          :: Migration files to apply:
+2025-05-29 19:42:11.116354 [INFO] manager          :: Migration file [up] version 1, path: /usr/share/everest/migrations/1_up-initial.sql
+2025-05-29 19:42:11.116455 [INFO] manager          :: Migration file [up] version 2, path: /usr/share/everest/migrations/2_up-forward-exceptions.sql
+2025-05-29 19:42:11.116514 [INFO] manager          :: Migration file [up] version 3, path: /usr/share/everest/migrations/3_up-access_config.sql
+2025-05-29 19:42:11.116570 [INFO] manager          :: Migration file [up] version 4, path: /usr/share/everest/migrations/4_up-multi_config.sql
+2025-05-29 19:42:11.143217 [INFO] manager          :: Database not initialized or not valid, seeding from YAML config file: "/root/config-pev-sim-DC.yaml"
+2025-05-29 19:42:11.170007 [INFO] manager          :: Loading config file at: /root/config-pev-sim-DC.yaml
+2025-05-29 19:42:11.213669 [INFO] manager          :: Module configs written to database successfully
+2025-05-29 19:42:11.251138 [INFO] manager          :: Loading module configs from pre-loaded database configuration
+2025-05-29 19:42:11.323098 [INFO] manager          :: Loading module configs from pre-loaded database configuration
+2025-05-29 19:42:11.387613 [INFO] manager          :: Loading module configs from pre-loaded database configuration
+2025-05-29 19:42:11.421222 [INFO] manager          :: Config loading completed in 61ms
+2025-05-29 19:42:11.421949 [INFO] manager          :: Manager state transition: Initializing -> StartingModules
+2025-05-29 19:42:11.422251 [INFO] manager          :: Starting 5 modules
+2025-05-29 19:42:12.193129 [INFO] DieterEvDriver_  :: init
+2025-05-29 19:42:12.193284 [INFO] DieterEvDriver_  :: Attempting to open serial port /dev/ttyUSB0 at 19200 baud...
+2025-05-29 19:42:12.194257 [INFO] DieterEvDriver_  :: Module DieterEvDriver_instance initialized [739ms]
+2025-05-29 19:42:12.196333 [INFO] DieterEvDriver_  :: Serial port successfully opened.
+2025-05-29 19:42:12.220958 [INFO] Store0:Store     :: Module Store0 initialized [738ms]
+2025-05-29 19:42:12.225214 [INFO] EvSlac0:EvSlac   :: Module EvSlac0 initialized [749ms]
+2025-05-29 19:42:12.245305 [INFO] EvManager0:EvMa  :: Module EvManager0 initialized [785ms]
+2025-05-29 19:42:15.542494 [INFO] PyEvJosev0       :: Module PyEvJosev0 initialized [719ms]
+2025-05-29 19:42:15.587822 [INFO] manager          :: Clearing retained topics published by manager during startup
+2025-05-29 19:42:15.588861 [INFO] manager          :: 🚙🚙🚙 All modules are initialized. EVerest up and running [4166ms] 🚙🚙🚙
+2025-05-29 19:42:15.589566 [INFO] manager          :: Manager state transition: StartingModules -> Running
+2025-05-29 19:42:15.592535 [INFO] DieterEvDriver_  :: ready
+2025-05-29 19:42:15.613407 [INFO] EvSlac0:EvSlac   :: EvSlac: Starting the SLAC state machine
+2025-05-29 19:42:15.613907 [INFO] EvSlac0:EvSlac   :: EvSlac: Entered Reset state
+2025-05-29 19:42:15.613966 [INFO] EvSlac0:EvSlac   :: EvSlac: Called callback of ResetState
+2025-05-29 19:42:15.683666 [INFO] DieterEvDriver_  :: allow power on: false
+2025-05-29 19:42:15.683900 [INFO] DieterEvDriver_  :: TX: set_contactor:0
+2025-05-29 19:42:15.683983 [INFO] DieterEvDriver_  :: TX: set_contactor:0
+2025-05-29 19:42:15.779477 [INFO] DieterEvDriver_  :: handle_set_ac_max_current: 16
+2025-05-29 19:42:15.863721 [INFO] DieterEvDriver_  :: handle_set_three_phases: false
+2025-05-29 19:42:15.955557 [INFO] DieterEvDriver_  :: handle_enable: true
+2025-05-29 19:42:15.956052 [INFO] DieterEvDriver_  :: published bsp_measurement: {
+    "cp_pwm_duty_cycle": 0.0,
+    "proximity_pilot": {
+        "ampacity": "A_13"
+    }
+}
+2025-05-29 19:42:15.956271 [INFO] DieterEvDriver_  :: published bsp_event: {
+    "event": "A"
+}
+2025-05-29 19:42:16.252686 [INFO] DieterEvDriver_  :: change c_p state from A to A
+2025-05-29 19:42:16.252888 [INFO] DieterEvDriver_  :: TX: set_state_c:0
+2025-05-29 19:42:16.253015 [INFO] DieterEvDriver_  :: TX: set_contactor:0
+2025-05-29 19:42:16.299593 [INFO] DieterEvDriver_  :: allow power on: false
+2025-05-29 19:42:16.300393 [INFO] DieterEvDriver_  :: TX: set_contactor:0
+2025-05-29 19:42:16.300970 [INFO] DieterEvDriver_  :: TX: set_contactor:0
+2025-05-29 19:42:18.388862 [INFO] DieterEvDriver_  :: change c_p state from A to B
+2025-05-29 19:42:18.389284 [INFO] DieterEvDriver_  :: TX: set_connector_lock:1
+2025-05-29 19:42:18.715989 [INFO] DieterEvDriver_  :: TX: set_state_c:0
+2025-05-29 19:42:18.716419 [INFO] DieterEvDriver_  :: TX: set_contactor:0
+2025-05-29 19:42:18.768752 [INFO] DieterEvDriver_  :: allow power on: false
+2025-05-29 19:42:18.769579 [INFO] DieterEvDriver_  :: TX: set_contactor:0
+2025-05-29 19:42:18.770275 [INFO] DieterEvDriver_  :: TX: set_contactor:0
+2025-05-29 19:42:19.219625 [INFO] EvSlac0:EvSlac   :: EvSlac: Called callback of ResetState
+2025-05-29 19:42:19.265139 [INFO] EvSlac0:EvSlac   :: EvSlac: Entered init state
+2025-05-29 19:42:19.337924 [INFO] EvSlac0:EvSlac   :: EvSlac: Received unexpected message while SOUNDING
+2025-05-29 19:42:19.357335 [INFO] EvSlac0:EvSlac   :: EvSlac: Received unexpected message while SOUNDING
+2025-05-29 19:42:19.377090 [INFO] EvSlac0:EvSlac   :: EvSlac: Received unexpected message while SOUNDING
+2025-05-29 19:42:19.396920 [INFO] EvSlac0:EvSlac   :: EvSlac: Received unexpected message while SOUNDING
+2025-05-29 19:42:19.416907 [INFO] EvSlac0:EvSlac   :: EvSlac: Received unexpected message while SOUNDING
+2025-05-29 19:42:19.436340 [INFO] EvSlac0:EvSlac   :: EvSlac: Received unexpected message while SOUNDING
+2025-05-29 19:42:19.457515 [INFO] EvSlac0:EvSlac   :: EvSlac: Received unexpected message while SOUNDING
+2025-05-29 19:42:19.475101 [INFO] EvSlac0:EvSlac   :: EvSlac: Received unexpected message while SOUNDING
+2025-05-29 19:42:19.494918 [INFO] EvSlac0:EvSlac   :: EvSlac: Received unexpected message while SOUNDING
+2025-05-29 19:42:19.514571 [INFO] EvSlac0:EvSlac   :: EvSlac: Received unexpected message after SOUNDING
+2025-05-29 19:42:19.558811 [INFO] EvSlac0:EvSlac   :: EvSlac: Entered MatchRequestState state
+2025-05-29 19:42:19.565975 [INFO] EvSlac0:EvSlac   :: EvSlac: Entered JoinNetwork state
+2025-05-29 19:42:19.582665 [INFO] EvSlac0:EvSlac   :: EvSlac: Entered matched state
+2025-05-29 19:42:24.676860 [WARN] PyEvJosev0      pybind11_init_everestpy(pybind11::module_&)::<lambda(const std::string&)> :: A TimeoutError occurred. Waited for Timeouts.SDP_REQ s after sending an SDPRequest
+2025-05-29 19:42:24.931241 [WARN] PyEvJosev0      pybind11_init_everestpy(pybind11::module_&)::<lambda(const std::string&)> :: A TimeoutError occurred. Waited for Timeouts.SDP_REQ s after sending an SDPRequest
+2025-05-29 19:42:25.184511 [WARN] PyEvJosev0      pybind11_init_everestpy(pybind11::module_&)::<lambda(const std::string&)> :: A TimeoutError occurred. Waited for Timeouts.SDP_REQ s after sending an SDPRequest
+2025-05-29 19:42:25.437996 [WARN] PyEvJosev0      pybind11_init_everestpy(pybind11::module_&)::<lambda(const std::string&)> :: A TimeoutError occurred. Waited for Timeouts.SDP_REQ s after sending an SDPRequest
+2025-05-29 19:42:25.691518 [WARN] PyEvJosev0      pybind11_init_everestpy(pybind11::module_&)::<lambda(const std::string&)> :: A TimeoutError occurred. Waited for Timeouts.SDP_REQ s after sending an SDPRequest
+2025-05-29 19:42:38.679398 [INFO] DieterEvDriver_  :: change c_p state from B to C
+2025-05-29 19:42:38.680165 [INFO] DieterEvDriver_  :: TX: set_state_c:1
+2025-05-29 19:42:38.680477 [INFO] DieterEvDriver_  :: TX: set_contactor:0
+2025-05-29 19:43:06.320588 [ERRO] PyEvJosev0      pybind11_init_everestpy(pybind11::module_&)::<lambda(const std::string&)> :: EVCC tried to initiate a V2GCommunicationSession, but maximum number of SDP retry cycles (1) is now reached. Shutting down high-level communication. Unplug and plug in the cable again if you want to start anew.
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/site-packages/iso15118/evcc/comm_session_handler.py", line 584, in get_from_rcv_queue
+    await self.restart_sdp(True)
+  File "/usr/lib/python3.12/site-packages/iso15118/evcc/comm_session_handler.py", line 401, in restart_sdp
+    raise SDPFailedError(
+iso15118.shared.exceptions.SDPFailedError: EVCC tried to initiate a V2GCommunicationSession, but maximum number of SDP retry cycles (1) is now reached. Shutting down high-level communication. Unplug and plug in the cable again if you want to start anew.
+^C2025-05-29 19:43:16.610995 [INFO] manager          :: SIGINT/SIGTERM received
+2025-05-29 19:43:16.613015 [INFO] manager          :: Manager state transition: Running -> ShutdownRequested
+2025-05-29 19:43:16.613667 [INFO] manager          :: Shutting down modules...
+2025-05-29 19:43:16.613931 [INFO] manager          :: Manager state transition: ShutdownRequested -> ForceTerminating
+2025-05-29 19:43:16.614333 [INFO] manager          :: Terminating modules (graceful shutdown not enabled)...
+2025-05-29 19:43:16.615301 [INFO] manager          :: SIGTERM of child: DieterEvDriver_instance (pid: 558) succeeded.
+2025-05-29 19:43:16.615782 [INFO] manager          :: SIGTERM of child: EvManager0 (pid: 559) succeeded.
+2025-05-29 19:43:16.616205 [INFO] manager          :: SIGTERM of child: EvSlac0 (pid: 560) succeeded.
+2025-05-29 19:43:16.616526 [INFO] manager          :: SIGTERM of child: PyEvJosev0 (pid: 561) succeeded.
+2025-05-29 19:43:16.616772 [INFO] manager          :: SIGTERM of child: Store0 (pid: 562) succeeded.
+2025-05-29 19:43:16.624068 [INFO] manager          :: Module Store0 (pid 562) shutdown [11ms] with status: signal=15
+2025-05-29 19:43:16.625584 [INFO] manager          :: Module DieterEvDriver_instance (pid 558) shutdown [12ms] with status: signal=15
+2025-05-29 19:43:16.626731 [INFO] manager          :: Module EvManager0 (pid 559) shutdown [13ms] with status: signal=15
+2025-05-29 19:43:16.634989 [INFO] manager          :: Module PyEvJosev0 (pid 561) shutdown [21ms] with status: signal=15
+2025-05-29 19:43:16.648437 [INFO] manager          :: Module EvSlac0 (pid 560) shutdown [35ms] with status: signal=15
+2025-05-29 19:43:16.648654 [INFO] manager          :: Manager state transition: ForceTerminating -> ShutdownFinalizing
+2025-05-29 19:43:16.648902 [WARN] manager         std::optional<int> Manager::handle_finish_normal_shutdown(RuntimeContext&, ManagerAdminPanel&) :: Modules that did not shut down cleanly: Store0 (signal=15) DieterEvDriver_instance (signal=15) EvManager0 (signal=15) PyEvJosev0 (signal=15) EvSlac0 (signal=15)
+2025-05-29 19:43:16.649046 [INFO] manager          :: 👋👋👋 EVerest manager is exiting [36ms] 👋👋👋
+2025-05-29 19:43:16.649185 [INFO] manager          :: Manager state transition: ShutdownFinalizing -> Exiting
+
