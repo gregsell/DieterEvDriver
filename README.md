@@ -14,6 +14,9 @@ This project simulates a plug-in EV communicating over CCS with a charging stati
 The software stack is built on [EVerest](https://everest.github.io/), the open-source EV charging framework initiated by PIONIX. EVerest handles the protocol state machines; The module `DieterEvDriver` bridges EVerest to the Dieter hardware board via a serial interface.  
 Additionally, a custom embedded linux image was developed including all necessary packages.
 
+### Hardware setup
+![building a box](results/PEV_sim_box_build_annotated.png)
+
 ## Architecture
 ![sw arch](/docs/sys_arch_sw.jpg)
 The module `EvManager` is the central connector. `EvSlac` handles the PLC via a homeplug modem and `pyEvJosev` simulates a car. `DieterEvDriver` implements the `ev_board_support` interface, which is required by `EvManager`.
@@ -44,12 +47,16 @@ The run configuration `config/run_config.yaml` wires up the modules. Key paramet
 DieterEvDriver:
   config_module:
     serial_port: /dev/ttyUSB0
-
+...
 # PLC network interface for SLAC
 EvSlac:
   config_module:
     device: eth1
+<<<<<<< Updated upstream
   
+=======
+...
+>>>>>>> Stashed changes
 # the same for pyEvJosev
 PyEvJosev:
     config_module:
