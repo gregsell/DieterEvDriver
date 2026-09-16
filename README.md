@@ -118,16 +118,16 @@ BBPATH = "${TOPDIR}"
 BBFILES ?= ""
 
 BBLAYERS ?= " \
-  /home/schlumpf/yocto-everest/poky/meta \
-  /home/schlumpf/yocto-everest/poky/meta-poky \
-  /home/schlumpf/yocto-everest/poky/meta-yocto-bsp \
-  /home/schlumpf/yocto-everest/poky/meta-openembedded/meta-oe \
-  /home/schlumpf/yocto-everest/poky/meta-openembedded/meta-python \
-  /home/schlumpf/yocto-everest/poky/meta-openembedded/meta-networking \
-  /home/schlumpf/yocto-everest/poky/meta-raspberrypi \
-  /home/schlumpf/yocto-everest/poky/meta-everest \
-  /home/schlumpf/yocto-everest/poky/meta-pev_sim \
-  /home/schlumpf/yocto-everest/poky/meta-openjdk-temurin \
+  /home/$USER/yocto-everest/poky/meta \
+  /home/$USER/yocto-everest/poky/meta-poky \
+  /home/$USER/yocto-everest/poky/meta-yocto-bsp \
+  /home/$USER/yocto-everest/poky/meta-openembedded/meta-oe \
+  /home/$USER/yocto-everest/poky/meta-openembedded/meta-python \
+  /home/$USER/yocto-everest/poky/meta-openembedded/meta-networking \
+  /home/$USER/yocto-everest/poky/meta-raspberrypi \
+  /home/$USER/yocto-everest/poky/meta-everest \
+  /home/$USER/yocto-everest/poky/meta-pev_sim \
+  /home/$USER/yocto-everest/poky/meta-openjdk-temurin \
   "
 ```
 In this project a raspberry pi 3b+ was used. A precompiled image is available under 'Releases'. 
