@@ -3,7 +3,10 @@ The EVerest PEV Simulator project documentation is split in two repositories:
 1. this repo: EVerest software running on linux
 2. electronics and firmware of the "Dieter" handling low level communication - *" Device Interface ElecTronic Especially not limited to Raspberry"*, available here: [gregsell/Dieter_PEV_Simulator](https://github.com/gregsell/Dieter_PEV_Simulator)
 
-*add reference to whole BA?*
+
+demo: https://youtu.be/5YWvrdBq7K8?si=sz70jL9PTbtog_6K  
+An essay covering the whole project is available under `docs/` in english and german.  
+
 
 ## Overview
 This project simulates a plug-in EV communicating over CCS with a charging station. It replaces the vehicle with a hardware/software stack that speaks the same protocols:
